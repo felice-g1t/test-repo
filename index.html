@@ -1,0 +1,536 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>業務スーパー献立プランナー</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
+            background: #f0f4f0;
+            color: #333;
+            min-height: 100vh;
+        }
+
+        header {
+            background: linear-gradient(135deg, #2d7a3a, #4caf50);
+            color: white;
+            padding: 28px 20px;
+            text-align: center;
+            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
+        }
+
+        header h1 { font-size: 1.8rem; margin-bottom: 6px; }
+        header p { font-size: 0.9rem; opacity: 0.85; }
+
+        .container {
+            max-width: 960px;
+            margin: 0 auto;
+            padding: 24px 16px;
+        }
+
+        /* Controls */
+        .controls {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 24px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+        }
+
+        .controls h2 {
+            font-size: 1rem;
+            color: #2d7a3a;
+            margin-bottom: 16px;
+            font-weight: bold;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 14px;
+            align-items: flex-end;
+            flex-wrap: wrap;
+        }
+
+        .control-group { flex: 1; min-width: 130px; }
+
+        .control-group label {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+            font-weight: bold;
+            color: #555;
+        }
+
+        .control-group select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 0.95rem;
+            color: #333;
+            background: white;
+            cursor: pointer;
+            transition: border-color 0.2s;
+        }
+
+        .control-group select:focus {
+            outline: none;
+            border-color: #2d7a3a;
+        }
+
+        .btn-generate {
+            background: #2d7a3a;
+            color: white;
+            border: none;
+            padding: 12px 28px;
+            border-radius: 8px;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s, transform 0.1s;
+            white-space: nowrap;
+        }
+
+        .btn-generate:hover { background: #236030; }
+        .btn-generate:active { transform: scale(0.97); }
+
+        /* Section */
+        .section {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+            display: none;
+        }
+
+        .section.visible { display: block; }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: #2d7a3a;
+            margin-bottom: 16px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #e8f5e9;
+        }
+
+        /* Meal cards */
+        .meal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+            gap: 12px;
+        }
+
+        .meal-card {
+            background: #f8fdf8;
+            border: 2px solid #c8e6c9;
+            border-radius: 10px;
+            padding: 14px;
+            transition: box-shadow 0.2s;
+        }
+
+        .meal-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
+
+        .meal-card .day-label {
+            font-size: 0.75rem;
+            color: #888;
+            margin-bottom: 4px;
+        }
+
+        .meal-card .meal-icon { font-size: 1.5rem; margin-bottom: 4px; }
+
+        .meal-card .meal-name {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: #2d7a3a;
+            margin-bottom: 6px;
+        }
+
+        .meal-card .meal-desc {
+            font-size: 0.75rem;
+            color: #777;
+            line-height: 1.5;
+        }
+
+        /* Shopping list */
+        .shopping-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 12px 8px;
+            border-bottom: 1px solid #f0f0f0;
+            transition: background 0.15s;
+        }
+
+        .shopping-item:last-child { border-bottom: none; }
+        .shopping-item:hover { background: #f8fdf8; border-radius: 6px; }
+
+        .item-left { display: flex; flex-direction: column; }
+
+        .item-name {
+            font-weight: bold;
+            font-size: 0.95rem;
+            color: #333;
+        }
+
+        .item-detail {
+            font-size: 0.8rem;
+            color: #999;
+            margin-top: 2px;
+        }
+
+        .item-right { display: flex; flex-direction: column; align-items: flex-end; }
+
+        .item-qty {
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+
+        .item-price {
+            font-weight: bold;
+            color: #2d7a3a;
+            font-size: 1rem;
+        }
+
+        /* Total */
+        .total-section {
+            background: linear-gradient(135deg, #2d7a3a, #388e3c);
+            color: white;
+            border-radius: 14px;
+            padding: 28px;
+            text-align: center;
+            box-shadow: 0 4px 15px rgba(45,122,58,0.3);
+            display: none;
+        }
+
+        .total-section.visible { display: block; }
+
+        .total-label { font-size: 0.95rem; opacity: 0.85; margin-bottom: 8px; }
+
+        .total-amount {
+            font-size: 3rem;
+            font-weight: bold;
+            letter-spacing: 2px;
+            margin-bottom: 10px;
+        }
+
+        .total-breakdown {
+            font-size: 0.85rem;
+            opacity: 0.8;
+            margin-bottom: 6px;
+        }
+
+        .total-note {
+            font-size: 0.78rem;
+            opacity: 0.65;
+        }
+
+        /* Responsive */
+        @media (max-width: 500px) {
+            header h1 { font-size: 1.4rem; }
+            .meal-grid { grid-template-columns: repeat(2, 1fr); }
+            .total-amount { font-size: 2.2rem; }
+        }
+    </style>
+</head>
+<body>
+
+<header>
+    <h1>🛒 業務スーパー献立プランナー</h1>
+    <p>業務スーパーの商品で節約献立を自動作成！</p>
+</header>
+
+<div class="container">
+
+    <div class="controls">
+        <h2>⚙️ 設定してボタンを押してください</h2>
+        <div class="control-row">
+            <div class="control-group">
+                <label>日数</label>
+                <select id="days">
+                    <option value="3">3日分</option>
+                    <option value="5" selected>5日分</option>
+                    <option value="7">7日分</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>人数</label>
+                <select id="persons">
+                    <option value="1">1人</option>
+                    <option value="2" selected>2人</option>
+                    <option value="3">3人</option>
+                    <option value="4">4人</option>
+                </select>
+            </div>
+            <div class="control-group">
+                <label>食事の回数</label>
+                <select id="mealsPerDay">
+                    <option value="1" selected>夕食のみ</option>
+                    <option value="2">昼・夕食</option>
+                    <option value="3">朝・昼・夕食</option>
+                </select>
+            </div>
+            <button class="btn-generate" onclick="generate()">🍽️ 献立を考える</button>
+        </div>
+    </div>
+
+    <div class="section" id="mealSection">
+        <div class="section-title">📅 献立</div>
+        <div class="meal-grid" id="mealGrid"></div>
+    </div>
+
+    <div class="section" id="shoppingSection">
+        <div class="section-title">🛒 買い物リスト</div>
+        <div id="shoppingList"></div>
+    </div>
+
+    <div class="total-section" id="totalSection">
+        <div class="total-label">お買い物合計金額（目安）</div>
+        <div class="total-amount" id="totalAmount">¥0</div>
+        <div class="total-breakdown" id="totalBreakdown"></div>
+        <div class="total-note">※価格は業務スーパー参考価格です。実際の価格・在庫と異なる場合があります</div>
+    </div>
+
+</div>
+
+<script>
+    const products = {
+        chicken:     { name: '鶏むね肉',         amount: '2kg',         price: 880  },
+        pork:        { name: '豚バラ薄切り',      amount: '1kg',         price: 700  },
+        ground:      { name: '合いびき肉',        amount: '500g',        price: 350  },
+        tofu:        { name: '絹ごし豆腐',        amount: '1kg',         price: 158  },
+        egg:         { name: '卵',                amount: '20個',        price: 350  },
+        bean_sprouts:{ name: 'もやし',            amount: '1kg',         price: 148  },
+        cabbage:     { name: 'キャベツ',          amount: '1個',         price: 198  },
+        onion:       { name: '玉ねぎ',            amount: '1.5kg',       price: 298  },
+        carrot:      { name: 'にんじん',          amount: '1kg',         price: 198  },
+        potato:      { name: 'じゃがいも',        amount: '2kg',         price: 348  },
+        mushroom:    { name: 'ぶなしめじ',        amount: '150g',        price: 88   },
+        gyoza:       { name: '冷凍餃子',          amount: '1kg(約50個)', price: 598  },
+        karaage:     { name: '冷凍唐揚げ',        amount: '1kg',         price: 678  },
+        curry_roux:  { name: 'カレールー',        amount: '1kg',         price: 348  },
+        tomato_can:  { name: 'トマト缶',          amount: '400g×2缶',    price: 176  },
+        pasta:       { name: 'パスタ',            amount: '500g',        price: 108  },
+        rice:        { name: '米',                amount: '5kg',         price: 1480 },
+        frozen_veg:  { name: '冷凍ミックス野菜',  amount: '500g',        price: 198  },
+        natto:       { name: '納豆',              amount: '3パック×3',   price: 198  },
+        bread:       { name: '食パン',            amount: '1斤',         price: 128  },
+    };
+
+    // fraction = パッケージ1個に対して1回の食事(2人前)で使う割合
+    const meals = [
+        {
+            name: 'チキンカレー', icon: '🍛',
+            desc: '鶏むね肉・じゃがいも・にんじん・玉ねぎ',
+            ingredients: { chicken: 0.25, potato: 0.15, carrot: 0.20, onion: 0.15, curry_roux: 0.12, rice: 0.07 }
+        },
+        {
+            name: '唐揚げ定食', icon: '🍗',
+            desc: '冷凍唐揚げ・キャベツ',
+            ingredients: { karaage: 0.30, cabbage: 0.25, rice: 0.07 }
+        },
+        {
+            name: '餃子定食', icon: '🥟',
+            desc: '冷凍餃子・もやし',
+            ingredients: { gyoza: 0.40, bean_sprouts: 0.30, rice: 0.07 }
+        },
+        {
+            name: '親子丼', icon: '🍚',
+            desc: '鶏むね肉・玉ねぎ・卵',
+            ingredients: { chicken: 0.20, onion: 0.10, egg: 0.10, rice: 0.07 }
+        },
+        {
+            name: '豚の生姜焼き', icon: '🥩',
+            desc: '豚バラ・玉ねぎ',
+            ingredients: { pork: 0.35, onion: 0.10, rice: 0.07 }
+        },
+        {
+            name: 'ハンバーグ', icon: '🍔',
+            desc: '合いびき肉・玉ねぎ・卵',
+            ingredients: { ground: 0.50, onion: 0.10, egg: 0.06, rice: 0.07 }
+        },
+        {
+            name: '肉豆腐', icon: '🍲',
+            desc: '豚バラ・豆腐・玉ねぎ',
+            ingredients: { pork: 0.30, tofu: 0.35, onion: 0.10, rice: 0.07 }
+        },
+        {
+            name: 'ミートソースパスタ', icon: '🍝',
+            desc: '合いびき肉・トマト缶・パスタ',
+            ingredients: { ground: 0.50, tomato_can: 0.50, pasta: 0.50 }
+        },
+        {
+            name: '豚汁定食', icon: '🥣',
+            desc: '豚バラ・根菜・豆腐・味噌',
+            ingredients: { pork: 0.20, potato: 0.10, carrot: 0.15, onion: 0.10, tofu: 0.25, rice: 0.07 }
+        },
+        {
+            name: '野菜炒め定食', icon: '🥬',
+            desc: 'もやし・キャベツ・豚バラ',
+            ingredients: { pork: 0.30, cabbage: 0.25, bean_sprouts: 0.30, rice: 0.07 }
+        },
+        {
+            name: '麻婆豆腐', icon: '🌶️',
+            desc: '合いびき肉・豆腐',
+            ingredients: { ground: 0.40, tofu: 0.40, rice: 0.07 }
+        },
+        {
+            name: 'きのこと豚炒め', icon: '🍄',
+            desc: 'ぶなしめじ・豚バラ',
+            ingredients: { mushroom: 1.00, pork: 0.25, rice: 0.07 }
+        },
+        {
+            name: '冷凍野菜チャーハン', icon: '🍳',
+            desc: '冷凍ミックス野菜・卵',
+            ingredients: { frozen_veg: 0.50, egg: 0.10, rice: 0.07 }
+        },
+        {
+            name: 'チキンソテー', icon: '🍽️',
+            desc: '鶏むね肉・キャベツ',
+            ingredients: { chicken: 0.25, cabbage: 0.25, rice: 0.07 }
+        },
+        {
+            name: '納豆ご飯', icon: '🫘',
+            desc: '納豆',
+            ingredients: { natto: 0.33, rice: 0.07 }
+        },
+        {
+            name: 'もやし炒め定食', icon: '🌿',
+            desc: 'もやし・豚バラ・卵',
+            ingredients: { bean_sprouts: 0.50, pork: 0.20, egg: 0.06, rice: 0.07 }
+        },
+    ];
+
+    // 朝食専用（手軽なもの）
+    const breakfastMeals = [
+        {
+            name: 'トースト', icon: '🍞',
+            desc: '食パン・卵',
+            ingredients: { bread: 0.30, egg: 0.06 }
+        },
+        {
+            name: '卵かけご飯', icon: '🥚',
+            desc: '卵・ご飯',
+            ingredients: { egg: 0.06, rice: 0.05 }
+        },
+        {
+            name: '納豆ご飯', icon: '🫘',
+            desc: '納豆・ご飯',
+            ingredients: { natto: 0.33, rice: 0.05 }
+        },
+    ];
+
+    const dayNames = ['月', '火', '水', '木', '金', '土', '日'];
+
+    function pickRandom(arr, n) {
+        const result = [];
+        const pool = [...arr];
+        while (result.length < n) {
+            pool.sort(() => Math.random() - 0.5);
+            result.push(...pool);
+        }
+        return result.slice(0, n);
+    }
+
+    function generate() {
+        const days = parseInt(document.getElementById('days').value);
+        const persons = parseInt(document.getElementById('persons').value);
+        const mealsPerDay = parseInt(document.getElementById('mealsPerDay').value);
+        const personFactor = persons / 2;
+
+        // 食事時間帯ラベルとメール種別を決定
+        let timeSlots;
+        if (mealsPerDay === 1)      timeSlots = [{ label: '夕食', pool: meals }];
+        else if (mealsPerDay === 2) timeSlots = [{ label: '昼食', pool: meals }, { label: '夕食', pool: meals }];
+        else                        timeSlots = [{ label: '朝食', pool: breakfastMeals }, { label: '昼食', pool: meals }, { label: '夕食', pool: meals }];
+
+        // 各食事時間帯ごとにランダム選択
+        const plan = []; // [{ day, timeLabel, meal }]
+        for (const slot of timeSlots) {
+            const picked = pickRandom(slot.pool, days);
+            for (let d = 0; d < days; d++) {
+                plan.push({ day: d, timeLabel: slot.label, meal: picked[d] });
+            }
+        }
+        // 日付順にソート
+        plan.sort((a, b) => a.day - b.day || timeSlots.findIndex(s => s.label === a.timeLabel) - timeSlots.findIndex(s => s.label === b.timeLabel));
+
+        // 献立グリッド
+        const grid = document.getElementById('mealGrid');
+        grid.innerHTML = '';
+        for (const entry of plan) {
+            const card = document.createElement('div');
+            card.className = 'meal-card';
+            const timeLabel = mealsPerDay > 1 ? `<br>${entry.timeLabel}` : '';
+            card.innerHTML = `
+                <div class="day-label">${dayNames[entry.day]}曜日${timeLabel}</div>
+                <div class="meal-icon">${entry.meal.icon}</div>
+                <div class="meal-name">${entry.meal.name}</div>
+                <div class="meal-desc">${entry.meal.desc}</div>
+            `;
+            grid.appendChild(card);
+        }
+
+        // 食材消費量を集計
+        const consumption = {};
+        for (const entry of plan) {
+            for (const [id, fraction] of Object.entries(entry.meal.ingredients)) {
+                consumption[id] = (consumption[id] || 0) + fraction * personFactor;
+            }
+        }
+
+        // 買い物リスト生成
+        const listEl = document.getElementById('shoppingList');
+        listEl.innerHTML = '';
+        let total = 0;
+
+        // 消費量が多い順に並べる
+        const sortedItems = Object.entries(consumption).sort((a, b) => {
+            const costA = Math.ceil(a[1]) * products[a[0]].price;
+            const costB = Math.ceil(b[1]) * products[b[0]].price;
+            return costB - costA;
+        });
+
+        for (const [id, consumed] of sortedItems) {
+            const prod = products[id];
+            const packs = Math.ceil(consumed);
+            const cost = packs * prod.price;
+            total += cost;
+
+            const item = document.createElement('div');
+            item.className = 'shopping-item';
+            item.innerHTML = `
+                <div class="item-left">
+                    <div class="item-name">${prod.name}</div>
+                    <div class="item-detail">${prod.amount}</div>
+                </div>
+                <div class="item-right">
+                    <div class="item-qty">${packs}個</div>
+                    <div class="item-price">¥${cost.toLocaleString()}</div>
+                </div>
+            `;
+            listEl.appendChild(item);
+        }
+
+        // 合計
+        const perDay = Math.round(total / days);
+        const perPerson = Math.round(total / persons);
+        document.getElementById('totalAmount').textContent = `¥${total.toLocaleString()}`;
+        document.getElementById('totalBreakdown').textContent =
+            `1日あたり約 ¥${perDay.toLocaleString()} ／ 1人あたり約 ¥${perPerson.toLocaleString()}`;
+
+        // 表示
+        document.getElementById('mealSection').classList.add('visible');
+        document.getElementById('shoppingSection').classList.add('visible');
+        document.getElementById('totalSection').classList.add('visible');
+
+        document.getElementById('mealSection').scrollIntoView({ behavior: 'smooth' });
+    }
+</script>
+
+</body>
+</html>
