@@ -21,8 +21,13 @@ header p{font-size:0.9rem;opacity:0.85}
 .week-grid tbody tr:hover td{background:#f8fdf8}
 .day-name-cell{font-weight:bold;font-size:0.95rem;color:#2d7a3a;padding-left:4px!important;text-align:left!important;white-space:nowrap}
 .meal-check input[type=checkbox]{width:22px;height:22px;cursor:pointer;accent-color:#2d7a3a}
-.day-persons{padding:5px 3px;border:1.5px solid #ddd;border-radius:7px;font-size:0.82rem;color:#333;background:white;cursor:pointer;width:100%;min-width:54px}
-.day-persons:focus{outline:none;border-color:#2d7a3a}
+.persons-cell{text-align:left!important;padding:5px 4px!important}
+.num-group{display:flex;align-items:center;gap:4px;margin-bottom:3px}
+.num-group:last-child{margin-bottom:0}
+.num-label{font-size:0.68rem;color:#888;width:26px;flex-shrink:0}
+.num-input{width:40px;padding:3px 2px;border:1.5px solid #ddd;border-radius:6px;text-align:center;font-size:0.85rem;color:#333;-moz-appearance:textfield}
+.num-input::-webkit-outer-spin-button,.num-input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0}
+.num-input:focus{outline:none;border-color:#2d7a3a}
 .btn-generate{background:#2d7a3a;color:white;border:none;padding:13px 32px;border-radius:8px;font-size:1rem;font-weight:bold;cursor:pointer;transition:background 0.2s,transform 0.1s;width:100%}
 .btn-generate:hover{background:#236030}
 .btn-generate:active{transform:scale(0.97)}
@@ -136,7 +141,7 @@ header p{font-size:0.9rem;opacity:0.85}
             <th>朝食</th>
             <th>昼食</th>
             <th>夕食</th>
-            <th>人数</th>
+            <th style="text-align:left">人数<br><span style="font-weight:normal;font-size:0.68rem;color:#aaa">大人/小学/幼児</span></th>
           </tr>
         </thead>
         <tbody>
@@ -145,49 +150,77 @@ header p{font-size:0.9rem;opacity:0.85}
             <td class="meal-check"><input type="checkbox" id="d0b"></td>
             <td class="meal-check"><input type="checkbox" id="d0l"></td>
             <td class="meal-check"><input type="checkbox" id="d0d" checked></td>
-            <td><select class="day-persons" id="d0p"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select></td>
+            <td class="persons-cell">
+              <div class="num-group"><span class="num-label">大人</span><input type="number" class="num-input" id="d0a" min="0" max="9" value="2"></div>
+              <div class="num-group"><span class="num-label">小学</span><input type="number" class="num-input" id="d0e" min="0" max="9" value="0"></div>
+              <div class="num-group"><span class="num-label">幼児</span><input type="number" class="num-input" id="d0t" min="0" max="9" value="0"></div>
+            </td>
           </tr>
           <tr>
             <td class="day-name-cell">火</td>
             <td class="meal-check"><input type="checkbox" id="d1b"></td>
             <td class="meal-check"><input type="checkbox" id="d1l"></td>
             <td class="meal-check"><input type="checkbox" id="d1d" checked></td>
-            <td><select class="day-persons" id="d1p"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select></td>
+            <td class="persons-cell">
+              <div class="num-group"><span class="num-label">大人</span><input type="number" class="num-input" id="d1a" min="0" max="9" value="2"></div>
+              <div class="num-group"><span class="num-label">小学</span><input type="number" class="num-input" id="d1e" min="0" max="9" value="0"></div>
+              <div class="num-group"><span class="num-label">幼児</span><input type="number" class="num-input" id="d1t" min="0" max="9" value="0"></div>
+            </td>
           </tr>
           <tr>
             <td class="day-name-cell">水</td>
             <td class="meal-check"><input type="checkbox" id="d2b"></td>
             <td class="meal-check"><input type="checkbox" id="d2l"></td>
             <td class="meal-check"><input type="checkbox" id="d2d" checked></td>
-            <td><select class="day-persons" id="d2p"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select></td>
+            <td class="persons-cell">
+              <div class="num-group"><span class="num-label">大人</span><input type="number" class="num-input" id="d2a" min="0" max="9" value="2"></div>
+              <div class="num-group"><span class="num-label">小学</span><input type="number" class="num-input" id="d2e" min="0" max="9" value="0"></div>
+              <div class="num-group"><span class="num-label">幼児</span><input type="number" class="num-input" id="d2t" min="0" max="9" value="0"></div>
+            </td>
           </tr>
           <tr>
             <td class="day-name-cell">木</td>
             <td class="meal-check"><input type="checkbox" id="d3b"></td>
             <td class="meal-check"><input type="checkbox" id="d3l"></td>
             <td class="meal-check"><input type="checkbox" id="d3d" checked></td>
-            <td><select class="day-persons" id="d3p"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select></td>
+            <td class="persons-cell">
+              <div class="num-group"><span class="num-label">大人</span><input type="number" class="num-input" id="d3a" min="0" max="9" value="2"></div>
+              <div class="num-group"><span class="num-label">小学</span><input type="number" class="num-input" id="d3e" min="0" max="9" value="0"></div>
+              <div class="num-group"><span class="num-label">幼児</span><input type="number" class="num-input" id="d3t" min="0" max="9" value="0"></div>
+            </td>
           </tr>
           <tr>
             <td class="day-name-cell">金</td>
             <td class="meal-check"><input type="checkbox" id="d4b"></td>
             <td class="meal-check"><input type="checkbox" id="d4l"></td>
             <td class="meal-check"><input type="checkbox" id="d4d" checked></td>
-            <td><select class="day-persons" id="d4p"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select></td>
+            <td class="persons-cell">
+              <div class="num-group"><span class="num-label">大人</span><input type="number" class="num-input" id="d4a" min="0" max="9" value="2"></div>
+              <div class="num-group"><span class="num-label">小学</span><input type="number" class="num-input" id="d4e" min="0" max="9" value="0"></div>
+              <div class="num-group"><span class="num-label">幼児</span><input type="number" class="num-input" id="d4t" min="0" max="9" value="0"></div>
+            </td>
           </tr>
           <tr>
             <td class="day-name-cell">土</td>
             <td class="meal-check"><input type="checkbox" id="d5b" checked></td>
             <td class="meal-check"><input type="checkbox" id="d5l" checked></td>
             <td class="meal-check"><input type="checkbox" id="d5d" checked></td>
-            <td><select class="day-persons" id="d5p"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select></td>
+            <td class="persons-cell">
+              <div class="num-group"><span class="num-label">大人</span><input type="number" class="num-input" id="d5a" min="0" max="9" value="2"></div>
+              <div class="num-group"><span class="num-label">小学</span><input type="number" class="num-input" id="d5e" min="0" max="9" value="0"></div>
+              <div class="num-group"><span class="num-label">幼児</span><input type="number" class="num-input" id="d5t" min="0" max="9" value="0"></div>
+            </td>
           </tr>
           <tr>
             <td class="day-name-cell">日</td>
             <td class="meal-check"><input type="checkbox" id="d6b" checked></td>
             <td class="meal-check"><input type="checkbox" id="d6l" checked></td>
             <td class="meal-check"><input type="checkbox" id="d6d" checked></td>
-            <td><select class="day-persons" id="d6p"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select></td>
+            <td class="persons-cell">
+              <div class="num-group"><span class="num-label">大人</span><input type="number" class="num-input" id="d6a" min="0" max="9" value="2"></div>
+              <div class="num-group"><span class="num-label">小学</span><input type="number" class="num-input" id="d6e" min="0" max="9" value="0"></div>
+              <div class="num-group"><span class="num-label">幼児</span><input type="number" class="num-input" id="d6t" min="0" max="9" value="0"></div>
+            </td>
           </tr>
         </tbody>
       </table>
@@ -615,8 +648,11 @@ function generate() {
     const hasB = document.getElementById('d'+i+'b').checked;
     const hasL = document.getElementById('d'+i+'l').checked;
     const hasD = document.getElementById('d'+i+'d').checked;
-    const persons = parseInt(document.getElementById('d'+i+'p').value);
-    if (hasB || hasL || hasD) activeDays.push({label:dayNames[i], hasB, hasL, hasD, persons});
+    const adults     = parseInt(document.getElementById('d'+i+'a').value) || 0;
+    const elementary = parseInt(document.getElementById('d'+i+'e').value) || 0;
+    const toddlers   = parseInt(document.getElementById('d'+i+'t').value) || 0;
+    const effectivePersons = adults + elementary * 0.5 + toddlers * (1/3);
+    if (hasB || hasL || hasD) activeDays.push({label:dayNames[i], hasB, hasL, hasD, effectivePersons});
   }
   if (activeDays.length === 0) { alert('食事を1つ以上チェックしてください'); return; }
 
@@ -626,7 +662,7 @@ function generate() {
   let officialUsed = false;
 
   for (const day of activeDays) {
-    const pf = day.persons / 2;
+    const pf = (day.effectivePersons > 0 ? day.effectivePersons : 1) / 2;
     const dayCard = document.createElement('div');
     dayCard.className = 'day-card';
     dayCard.innerHTML = '<div class="day-card-title">' + day.label + '曜日</div>';
@@ -682,10 +718,10 @@ function generate() {
   listEl.innerHTML = '';
   let total = 0;
   const totalDays = activeDays.length;
-  const avgPersons = activeDays.reduce((s, d) => s + d.persons, 0) / totalDays;
+  const totalEffective = activeDays.reduce((s, d) => s + d.effectivePersons, 0);
 
   Object.entries(consumption)
-    .filter(([id]) => products[id])
+    .filter(([id, consumed]) => products[id] && consumed > 0)
     .sort(([ai, av], [bi, bv]) => Math.ceil(bv) * products[bi].price - Math.ceil(av) * products[ai].price)
     .forEach(([id, consumed]) => {
       const prod = products[id];
@@ -707,8 +743,10 @@ function generate() {
     });
 
   document.getElementById('totalAmount').textContent = '¥' + total.toLocaleString();
+  const avgEffective = totalEffective / totalDays;
   document.getElementById('totalBreakdown').textContent =
-    totalDays + '日分 ／ 1日あたり約 ¥' + Math.round(total / totalDays).toLocaleString() + ' ／ 1人あたり約 ¥' + Math.round(total / avgPersons).toLocaleString();
+    totalDays + '日分 ／ 1日あたり約 ¥' + Math.round(total / totalDays).toLocaleString()
+    + (totalEffective > 0 ? ' ／ 1人あたり約 ¥' + Math.round(total / totalEffective).toLocaleString() : '');
 
   document.getElementById('mealSection').classList.add('visible');
   document.getElementById('shoppingSection').classList.add('visible');
