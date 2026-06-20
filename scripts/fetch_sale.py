@@ -41,6 +41,10 @@ HEADERS = {
 
 BASE = 'https://www.gyomusuper.jp'
 
+# ★ お住まいの地域に合わせて変更してください
+# hokkaido / east（南関東） / west（近畿） / kyusyu（九州）
+REGION = 'west'
+
 def match_product(text):
     for prod_id, keywords in PRODUCT_KEYWORDS.items():
         if any(kw in text for kw in keywords):
@@ -79,8 +83,8 @@ def get_image_urls(soup, page_url):
         if not src:
             continue
         absolute = urljoin(page_url, src)
-        # チラシ画像のみ対象（bargain_ を含むもの）
-        if 'bargain_' in absolute and re.search(r'\.(jpg|jpeg|png)', absolute, re.I):
+        # 指定地域のチラシ画像のみ対象
+        if f'bargain_{REGION}_' in absolute and re.search(r'\.(jpg|jpeg|png)', absolute, re.I):
             urls.append(absolute)
     return urls
 
