@@ -407,6 +407,22 @@ const sideDishes = [
    recipe:['大根を薄切りにして塩もみ5分','水気を絞り砂糖・酢・塩で和えて10分置く']},
   {id:'shisotofu',name:'青じそペースト冷奴',icon:'🌿', ingredients:{tofu:0.15,shiso:0.5,sesame:0.05},
    recipe:['青じそをみじん切りにし、すりごま・オリーブ油・塩少々と混ぜてペーストを作る','豆腐をひと口大に切って盛り、ペーストをかける']},
+  {id:'hakutsuke',name:'白菜の浅漬け',icon:'🥒', ingredients:{hakusai:0.30},
+   recipe:['白菜を一口大に切って塩もみする','30分置いて水気を絞る','昆布少々・醤油少々で和えて器に盛る']},
+  {id:'enoki_bt',name:'えのきのバターぽん酢',icon:'🍄', ingredients:{enoki:0.80},
+   recipe:['えのきをほぐしてフライパンに広げる','バターを溶かして焼き色をつける','ポン酢をかけてさっと絡める']},
+  {id:'horen_goma',name:'ほうれん草の胡麻和え',icon:'🥬', ingredients:{spinach:0.25,sesame:0.10},
+   recipe:['冷凍ほうれん草を解凍して水気をしっかり絞る','すりごま・醤油・みりん少々で和える']},
+  {id:'tuna_pote',name:'ツナポテトサラダ',icon:'🥗', ingredients:{potato:0.20,tuna_can:0.20,mayo:0.08},
+   recipe:['じゃがいもを茹でて熱いうちに潰す','ツナ缶を水気を切って加える','マヨネーズ・塩コショウで和える']},
+  {id:'cheese_cab',name:'チーズキャベツ蒸し',icon:'🧀', ingredients:{cabbage:0.25,cheese:0.10},
+   recipe:['キャベツをざく切りにして耐熱皿に入れる','チーズをのせてラップをしてレンジ3分加熱','塩・ブラックペッパーをかける']},
+  {id:'tofu_kimchi',name:'冷奴キムチのせ',icon:'🌶️', ingredients:{tofu:0.20,kimchi:0.10,sesame:0.03},
+   recipe:['豆腐を器に盛る','キムチを乗せてごま油・すりごまをかける（加熱不要）']},
+  {id:'sausage_corn',name:'ウインナーとコーンのソテー',icon:'🌽', ingredients:{sausage:0.15,canned_corn:0.20},
+   recipe:['ウインナーを斜め切りにして炒める','コーンを加えてバター・塩コショウで仕上げる']},
+  {id:'spring_onion_egg',name:'長ねぎと卵のふわふわ炒め',icon:'🥚', ingredients:{spring_onion:0.30,egg:0.12},
+   recipe:['長ねぎを2cm幅に切る','ごま油で長ねぎを炒め溶き卵を加える','ふわっと半熟のうちに醤油をかけて仕上げる']},
 ];
 
 const dinners = [
@@ -548,6 +564,110 @@ const dinners = [
   {name:'チキンの青じそペーストがけ',icon:'🌿',desc:'鶏むね肉・青じそペースト',
    ingredients:{chicken:0.25,shiso:1.5,sesame:0.15,rice:0.07},
    recipe:['青じそ50枚をみじん切りにして水にさらし水気を絞り、すりごま・レモン汁・塩・にんにく・オリーブ油と混ぜてペーストを作る','鶏むねを塩コショウして両面こんがり焼く','スライスしてペーストをたっぷりかける']},
+
+  // ---- 節約レシピ ----
+  {name:'豆腐そぼろ丼',icon:'🍚',desc:'合いびき肉・豆腐・卵（節約）',
+   ingredients:{ground:0.30,tofu:0.25,egg:0.08,rice:0.07,onion:0.08},
+   recipe:['合いびきと玉ねぎを炒める','豆腐をほぐしながら加えて炒める','醤油・みりん・砂糖で甘辛に味付け','溶き卵を加えてそぼろにし、ご飯に乗せる']},
+  {name:'無限キャベツ炒め',icon:'🥬',desc:'キャベツ・ウインナー・卵（節約）',
+   ingredients:{cabbage:0.30,sausage:0.20,egg:0.10,rice:0.07},
+   recipe:['ウインナーを炒める','キャベツを加えてにんにく醤油・塩コショウで炒める','最後に溶き卵を加えてざっくり混ぜてご飯に乗せる']},
+  {name:'納豆キムチ炒飯',icon:'🍳',desc:'納豆・キムチ・卵（節約）',
+   ingredients:{natto:0.22,kimchi:0.20,egg:0.10,rice:0.08},
+   recipe:['溶き卵をフライパンで炒り卵にする','ご飯・キムチを加えて強火で炒める','納豆を加えてざっくり混ぜ醤油・ごま油で仕上げる']},
+  {name:'こんにゃく甘辛炒め煮',icon:'🔴',desc:'こんにゃく・豚こま（節約）',
+   ingredients:{konnyaku:1.0,pork_kom:0.30,rice:0.07},
+   recipe:['こんにゃくをちぎって乾煎りし水分を飛ばす','豚こまを加えて炒める','醤油・みりん・砂糖・ごま油で甘辛に絡める']},
+  {name:'もやし卵にんにく炒め',icon:'🌿',desc:'もやし・卵・長ねぎ（節約）',
+   ingredients:{bean_sprouts:1.0,egg:0.12,rice:0.07,spring_onion:0.08},
+   recipe:['もやしを強火でさっと炒める','卵を加えて半熟で混ぜる','にんにく醤油・ごま油・塩コショウで仕上げ、長ねぎを散らす']},
+  {name:'肉みそ豆腐丼',icon:'🍚',desc:'合いびき肉・豆腐・味噌（節約）',
+   ingredients:{ground:0.35,tofu:0.25,miso:0.08,spring_onion:0.10,rice:0.07},
+   recipe:['合いびきを炒めて脂を飛ばす','豆腐をほぐしながら加える','味噌・みりん・醤油・砂糖で甘辛く炒め煮する','ご飯に乗せて長ねぎを添える']},
+  {name:'豚こまと野菜の味噌炒め',icon:'🥩',desc:'豚こま切れ・キャベツ・にんじん（節約）',
+   ingredients:{pork_kom:0.40,cabbage:0.25,carrot:0.10,miso:0.06,rice:0.07},
+   recipe:['豚こまを炒める','キャベツ・にんじんを加えて炒める','味噌・みりん・砂糖・にんにくを合わせたタレで炒め絡める']},
+  {name:'大根おろし豚バラ鍋',icon:'🍲',desc:'豚バラ・大根・ポン酢（節約）',
+   ingredients:{pork:0.25,daikon:0.40,miso:0.05},
+   recipe:['大根を半分はすりおろし、半分は薄切りにする','豚バラと薄切り大根をだし・醤油・みりんで煮る','大根おろしをたっぷり乗せてポン酢でいただく']},
+  {name:'ちくわとにんじんのきんぴら',icon:'🍢',desc:'ちくわ・にんじん（節約）',
+   ingredients:{chikuwa:0.50,carrot:0.15,rice:0.07},
+   recipe:['ちくわを斜め薄切り、にんじんを千切りにする','ごま油で炒め醤油・みりん・砂糖で甘辛に絡める','最後にすりごまをふる']},
+  {name:'白菜と豆腐の中華スープ',icon:'🍵',desc:'白菜・豆腐・長ねぎ（節約）',
+   ingredients:{hakusai:0.30,tofu:0.25,spring_onion:0.10,egg:0.08,rice:0.05},
+   recipe:['白菜を炒め水・鶏がらスープの素を加えて煮る','豆腐を加え、溶き卵を回し入れる','長ねぎ・ごま油で仕上げ雑炊風にする']},
+
+  // ---- ダイエットレシピ ----
+  {name:'よだれ鶏',icon:'🍗',desc:'鶏むね肉・長ねぎ・すりごま（ダイエット）',
+   ingredients:{chicken:0.30,spring_onion:0.15,sesame:0.12},
+   recipe:['鶏むねを水・酒・塩で茹でて火を止め余熱で15分火を通す','薄切りにして皿に並べる','醤油・酢・砂糖・ラー油・すりごまでタレを作る','長ねぎをみじん切りにしてタレと混ぜてかける']},
+  {name:'鶏むね蒸し野菜ポン酢',icon:'🥗',desc:'鶏むね肉・ブロッコリー・にんじん（ダイエット）',
+   ingredients:{chicken:0.25,frozen_broccoli:0.30,carrot:0.10},
+   recipe:['鶏むねを薄切りにして塩コショウ','フライパンに野菜・鶏肉を並べ水少量で蓋をして5分蒸す','ポン酢またはごま油塩でいただく']},
+  {name:'ヘルシー豆腐鍋',icon:'🍲',desc:'豆腐・白菜・えのき・鶏むね（ダイエット）',
+   ingredients:{tofu:0.40,hakusai:0.30,enoki:0.60,chicken:0.20,miso:0.08},
+   recipe:['だし・醤油・みりんでスープを作る','白菜・えのきを入れて煮る','鶏むねと豆腐を加えて火が通ったら完成','ポン酢や七味でいただく']},
+  {name:'蒸し鶏とキャベツのサラダ',icon:'🥗',desc:'鶏むね肉・キャベツ・もやし（ダイエット）',
+   ingredients:{chicken:0.25,cabbage:0.20,bean_sprouts:0.50,sesame:0.05,mayo:0.03},
+   recipe:['鶏むねを酒・塩でレンジ蒸し（600W 4分）','粗熱を取ってほぐす','キャベツ・もやしを茹でて水気を切る','ごまドレッシングまたはマヨ・ポン酢で和える']},
+  {name:'ブロッコリーと鶏むね塩炒め',icon:'🥦',desc:'鶏むね肉・冷凍ブロッコリー（ダイエット）',
+   ingredients:{chicken:0.25,frozen_broccoli:0.40},
+   recipe:['鶏むねを一口大に切り片栗粉・塩コショウをまぶす','フライパンでこんがり焼く','解凍したブロッコリーを加えてにんにく塩炒め']},
+  {name:'えのきともやしの豆腐鍋',icon:'🍲',desc:'豆腐・えのき・もやし（ダイエット）',
+   ingredients:{tofu:0.40,enoki:0.60,bean_sprouts:0.50,miso:0.08},
+   recipe:['だし汁を沸かしえのき・もやしを加える','豆腐をほぐしながら入れる','味噌を溶いて長ねぎを散らす（カロリー控えめ鍋）']},
+  {name:'こんにゃくのガーリックソテー',icon:'🔴',desc:'こんにゃく・長ねぎ（ダイエット）',
+   ingredients:{konnyaku:1.0,spring_onion:0.10,sesame:0.05},
+   recipe:['こんにゃくをひと口大に切って格子状に切り込みを入れる','乾煎りしてごま油・にんにく醤油で炒める','長ねぎ・すりごまをふってステーキ風に仕上げる']},
+  {name:'豆腐と大根のヘルシー煮',icon:'🍲',desc:'豆腐・大根・鶏むね（ダイエット）',
+   ingredients:{tofu:0.35,daikon:0.30,chicken:0.20,miso:0.06},
+   recipe:['大根を乱切りにして下茹で','鶏むねを加えただし・醤油・みりんで煮る','豆腐を加えてひと煮立ちさせ味を調える']},
+
+  // ---- 映えレシピ ----
+  {name:'チーズタッカルビ',icon:'🧀',desc:'鶏むね肉・キムチ・チーズ・キャベツ（映え）',
+   ingredients:{chicken:0.30,kimchi:0.25,cheese:0.20,cabbage:0.20,rice:0.07},
+   recipe:['鶏むねを一口大に切りコチュジャン・醤油・みりんで下味をつける','キャベツと一緒に炒める','キムチを加えてさらに炒め合わせる','中央にチーズをたっぷりのせて蓋をして溶かす']},
+  {name:'ビビンバ風丼',icon:'🌈',desc:'豚こま・ほうれん草・もやし・卵（映え）',
+   ingredients:{pork_kom:0.40,spinach:0.20,bean_sprouts:0.30,egg:0.08,rice:0.08,sesame:0.05,kimchi:0.10},
+   recipe:['豚こまをコチュジャン・醤油・みりんで甘辛く炒める','ほうれん草・もやしを別々に茹でてごま油・塩で和える','ご飯に豚こま・ほうれん草・もやし・キムチを彩り良く盛る','目玉焼きを乗せてすりごまをかける']},
+  {name:'ロールキャベツ トマト煮',icon:'🥬',desc:'キャベツ・合いびき肉・トマト缶（映え）',
+   ingredients:{cabbage:0.30,ground:0.40,onion:0.10,egg:0.05,tomato_can:0.50},
+   recipe:['キャベツをゆでて葉を剥がす','合いびき・玉ねぎみじん切り・卵・塩コショウでタネを作る','キャベツで包んで楊枝で止める','トマト缶・水・コンソメで30分煮込む']},
+  {name:'チーズハンバーグ',icon:'🍔',desc:'合いびき肉・チーズ（映え）',
+   ingredients:{ground:0.50,onion:0.10,egg:0.06,cheese:0.15,rice:0.07},
+   recipe:['玉ねぎみじん切りを炒めて冷ます','合いびき・玉ねぎ・卵・塩コショウをよくこねる','フライパンで両面を焼き蒸し焼きにする','最後にチーズをのせて蓋をして溶かす']},
+  {name:'ミネストローネ',icon:'🍅',desc:'トマト缶・野菜たっぷり・ウインナー（映え・節約）',
+   ingredients:{tomato_can:0.50,onion:0.10,carrot:0.12,cabbage:0.15,sausage:0.15},
+   recipe:['玉ねぎ・にんじんをオリーブ油で炒める','キャベツ・ウインナーを加えて炒める','トマト缶・水・コンソメを加えて15分煮込む','塩コショウで調味し仕上げる']},
+  {name:'豚バラと野菜の重ね蒸し',icon:'🥩',desc:'豚バラ・白菜・にんじん（映え）',
+   ingredients:{pork:0.30,hakusai:0.40,carrot:0.10},
+   recipe:['白菜・豚バラ・にんじんを交互に層状に重ねて鍋に詰める','水少量と塩を加えて蓋をして10〜12分蒸す','ポン酢でいただく（断面も美しい）']},
+  {name:'チキントマトチーズ焼き',icon:'🍅',desc:'鶏むね肉・トマト缶・チーズ（映え）',
+   ingredients:{chicken:0.25,tomato_can:0.30,cheese:0.15,onion:0.08,rice:0.07},
+   recipe:['鶏むねを一口大に切り塩コショウして焼く','玉ねぎとトマト缶を加えて煮込む','チーズをのせて蓋をして溶かす（グリルするとさらに映える）']},
+  {name:'ほうれん草チーズオムレツ',icon:'🍳',desc:'卵・ほうれん草・チーズ（映え）',
+   ingredients:{egg:0.15,spinach:0.25,cheese:0.15},
+   recipe:['冷凍ほうれん草を解凍して水気を絞る','卵・チーズ・塩コショウで混ぜ合わせる','バターを溶かしたフライパンで蓋をして弱火8分蒸し焼きにする']},
+  {name:'ブロッコリーチーズ焼き',icon:'🥦',desc:'冷凍ブロッコリー・チーズ・卵（映え・業スー）',
+   ingredients:{frozen_broccoli:0.50,cheese:0.20,egg:0.08},
+   recipe:['冷凍ブロッコリーをレンジ解凍して耐熱皿に並べる','溶き卵を回しかけチーズをたっぷりのせる','トースターで5〜7分焼いてチーズに焦げ目をつける']},
+
+  // ---- 業スー活用レシピ ----
+  {name:'冷凍唐揚げのタルタル丼',icon:'🍗',desc:'冷凍唐揚げ・タルタルソース（業スー）',
+   ingredients:{karaage:0.35,egg:0.12,mayo:0.08,cabbage:0.15,rice:0.07},
+   recipe:['冷凍唐揚げをトースターでカリッと温める','茹で卵をつぶしマヨネーズ・塩コショウ・酢でタルタルソースを作る','キャベツ千切りをしいたご飯に唐揚げを乗せ','タルタルソースをたっぷりかける']},
+  {name:'冷凍餃子のスープ煮',icon:'🥟',desc:'冷凍餃子・白菜・長ねぎ（業スー）',
+   ingredients:{gyoza:0.25,hakusai:0.25,spring_onion:0.10},
+   recipe:['鶏がらスープの素を溶かした湯を沸かす','白菜・餃子を入れて5分煮る','長ねぎとごま油で仕上げる（〆はうどんを追加してもOK）']},
+  {name:'冷凍枝豆とウインナー炒め',icon:'🫛',desc:'冷凍枝豆・ウインナー（業スー）',
+   ingredients:{frozen_edamame:0.30,sausage:0.25,rice:0.07},
+   recipe:['枝豆を解凍してさやから出す','ウインナーを斜め切りにして炒める','枝豆を加えてバター醤油・塩コショウで炒める']},
+  {name:'ウインナーポテトソテー',icon:'🌭',desc:'ウインナー・じゃがいも・玉ねぎ（業スー）',
+   ingredients:{sausage:0.30,potato:0.20,onion:0.10,rice:0.07},
+   recipe:['じゃがいもを薄切りにしてレンジで4分加熱','玉ねぎ・ウインナーと一緒に炒める','醤油・バター・塩コショウで仕上げる']},
+  {name:'ちくわチーズ焼き',icon:'🍢',desc:'ちくわ・チーズ（業スー・映え）',
+   ingredients:{chikuwa:0.60,cheese:0.15,rice:0.07},
+   recipe:['ちくわを縦半分に切り穴にチーズを詰める','トースターまたはフライパンでチーズが溶けるまで焼く','しょうゆを少々かけて仕上げる']},
 ];
 
 const lunchMeals = [
@@ -584,6 +704,27 @@ const lunchMeals = [
   {name:'青じそペーストうどん',icon:'🌿',desc:'青じそ・冷凍うどん（レタスクラブアレンジ）',
    ingredients:{shiso:1.5,udon:0.40,sesame:0.15},
    recipe:['青じそ50枚をみじん切りにして水にさらし水気を絞る','すりごま・レモン汁・塩・にんにく・オリーブ油と混ぜてペーストを作る','うどんを冷水で締めてペーストを和える（冷やしうどん）']},
+  {name:'キムチチャーハン',icon:'🍳',desc:'キムチ・卵・ウインナー（節約）',
+   ingredients:{kimchi:0.25,egg:0.10,sausage:0.15,rice:0.08},
+   recipe:['溶き卵をフライパンで炒り卵にする','ウインナーとキムチを加えてご飯を投入し強火で炒める','醤油・ごま油で仕上げる']},
+  {name:'もやしラーメン風うどん',icon:'🍜',desc:'もやし・うどん・長ねぎ・味噌（節約）',
+   ingredients:{bean_sprouts:0.50,udon:0.40,spring_onion:0.10,miso:0.08},
+   recipe:['味噌・醤油・鶏がらスープの素・ごま油でスープを作る','もやしと解凍うどんを入れて2〜3分煮る','長ねぎとごまをのせて完成']},
+  {name:'ビビン麺風冷やしうどん',icon:'🌈',desc:'うどん・キムチ・ほうれん草・卵（映え）',
+   ingredients:{udon:0.40,kimchi:0.20,spinach:0.15,sesame:0.05,egg:0.06},
+   recipe:['うどんを解凍して冷水で締める','コチュジャン・醤油・ごま油・酢でビビンタレを作る','うどん・キムチ・ほうれん草を盛り付けてタレをかけ卵黄を乗せる']},
+  {name:'ハムチーズトースト',icon:'🥪',desc:'食パン・ロースハム・チーズ（業スー）',
+   ingredients:{bread:0.25,ham_bacon:0.25,cheese:0.15},
+   recipe:['食パンにハムとチーズをのせる','トースターで3〜4分焼いてチーズが溶けるまで加熱する']},
+  {name:'ツナコーン炒飯',icon:'🍳',desc:'ツナ缶・コーン缶・卵（節約）',
+   ingredients:{tuna_can:0.25,canned_corn:0.25,egg:0.10,rice:0.08},
+   recipe:['卵を炒り卵にしてご飯を加える','ツナとコーンを加えて強火で炒める','塩コショウ・醤油で味付け']},
+  {name:'えのきと卵のスープうどん',icon:'🍜',desc:'うどん・えのき・卵（節約）',
+   ingredients:{udon:0.40,enoki:0.50,egg:0.08,mentsuyu:0.10},
+   recipe:['めんつゆ・水でスープを作り沸かす','えのきをほぐして入れて煮る','解凍うどんを加えて溶き卵を回し入れる']},
+  {name:'豆腐とキムチのスープうどん',icon:'🌶️',desc:'うどん・豆腐・キムチ（節約・ダイエット）',
+   ingredients:{udon:0.40,tofu:0.25,kimchi:0.20,spring_onion:0.08},
+   recipe:['水・鶏がらスープの素を沸かしキムチを加える','豆腐をちぎって入れ豆板醤少々で辛味を加える','解凍うどんと長ねぎを加えてごま油で仕上げる']},
 ];
 
 const breakfastMeals = [
@@ -602,6 +743,18 @@ const breakfastMeals = [
   {name:'ウインナーエッグトースト',icon:'🌭',desc:'食パン・ウインナー・卵',
    ingredients:{bread:0.25,sausage:0.10,egg:0.08},
    recipe:['ウインナーをフライパンで焼く','目玉焼きを作り食パンと一緒に盛り付ける']},
+  {name:'フレンチトースト',icon:'🍞',desc:'食パン・卵（映え朝食）',
+   ingredients:{bread:0.25,egg:0.10},
+   recipe:['卵・砂糖・少量の牛乳（水でも可）を混ぜてバットに食パンを浸す','15分以上浸したらバターを溶かしたフライパンで両面じっくり焼く','はちみつや砂糖をかけて完成']},
+  {name:'チーズトースト',icon:'🧀',desc:'食パン・チーズ（映え朝食）',
+   ingredients:{bread:0.25,cheese:0.15},
+   recipe:['食パンにとろけるチーズをたっぷりのせる','トースターで3〜4分焼きチーズに少し焦げ目をつける']},
+  {name:'納豆チーズトースト',icon:'🫘',desc:'食パン・納豆・チーズ（節約朝食）',
+   ingredients:{bread:0.25,natto:0.11,cheese:0.10},
+   recipe:['納豆をよく混ぜてタレで味付けする','食パンに納豆を広げてチーズをのせる','トースターで3〜4分焼く']},
+  {name:'卵とじ丼（朝食版）',icon:'🥚',desc:'卵・玉ねぎ（節約朝食）',
+   ingredients:{egg:0.12,onion:0.08,rice:0.05},
+   recipe:['玉ねぎを薄切りにしてだし・醤油・みりんで煮る','溶き卵を回し入れて半熟に仕上げる','ご飯に乗せて長ねぎを添える']},
 ];
 
 let salePrices = {};
@@ -771,6 +924,32 @@ async function loadRecipeData() {
   } catch(e) { /* silent */ }
 }
 loadRecipeData();
+
+async function loadSiteRecipes() {
+  try {
+    const res  = await fetch('./recipe_sites_data.json?_=' + Date.now());
+    const data = await res.json();
+    if (data.recipes && data.recipes.length > 0) {
+      const themeIcon = {節約:'💰', ダイエット:'🥗', 映え:'📸', 業スー:'🏪', 普通:'🍽️'};
+      data.recipes.forEach(r => {
+        if (!r.name || !r.recipe || r.recipe.length === 0) return;
+        const icon = themeIcon[r.theme] || '🍽️';
+        const meal = {
+          name: r.name,
+          icon,
+          desc: r.desc || r.theme + 'レシピ',
+          ingredients: r.ingredients || {},
+          recipe: r.recipe,
+          theme: r.theme || '普通',
+        };
+        // テーマ別に適切なカテゴリに追加（夕食・昼食どちらにも追加）
+        dinners.push(meal);
+        if (r.theme === '節約' || r.theme === 'ダイエット') lunchMeals.push(meal);
+      });
+    }
+  } catch(e) { /* recipe_sites_data.json がまだない場合はスキップ */ }
+}
+loadSiteRecipes();
 
 function pickRandom(arr, n) {
   const result = [], pool = [...arr];

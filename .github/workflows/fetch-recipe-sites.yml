@@ -1,0 +1,40 @@
+name: 節約・ダイエット・映え レシピ収集
+
+on:
+  schedule:
+    - cron: '0 13 * * 0'  # 毎週日曜 22:00 JST (13:00 UTC)
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Python パッケージをインストール
+        run: pip install requests beautifulsoup4 anthropic
+
+      - name: レシピを収集
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python scripts/fetch_recipe_sites.py
+
+      - name: 変更があればコミット & プッシュ
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add recipe_sites_data.json
+          git diff --staged --quiet && echo "変更なし" || (
+            git commit -m "レシピサイトデータを更新 $(date +'%Y-%m-%d')" &&
+            git push
+          )
