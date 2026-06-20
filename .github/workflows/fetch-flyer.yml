@@ -21,15 +21,12 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Tesseract OCR をインストール
-        run: |
-          sudo apt-get update -q
-          sudo apt-get install -y tesseract-ocr tesseract-ocr-jpn
-
       - name: Python パッケージをインストール
-        run: pip install requests beautifulsoup4 Pillow pytesseract
+        run: pip install requests beautifulsoup4 anthropic
 
       - name: セール情報を取得
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
         run: python scripts/fetch_sale.py
 
       - name: デバッグファイルを保存

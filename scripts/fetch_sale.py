@@ -1,18 +1,17 @@
 import requests
-from bs4 import BeautifulSoup
+import anthropic
+import base64
 import json
 import re
-import io
 from datetime import datetime
 from urllib.parse import urljoin
-from PIL import Image
-import pytesseract
+from bs4 import BeautifulSoup
 
 PRODUCT_KEYWORDS = {
     'chicken':      ['鶏むね', '鶏胸', 'とりむね', '若どり', '若鶏'],
     'pork':         ['豚バラ', '豚ばら', '豚肉'],
     'ground':       ['合いびき', '合挽き', 'ひき肉', '挽き肉'],
-    'tofu':         ['豆腐', 'とうふ', '絹ごし', '木綿豆腐'],
+    'tofu':         ['豆腐', 'とうふ', '絹ごし', '木綿豆腐', '厚揚げ', '絹厚あげ'],
     'egg':          ['卵', '玉子', 'たまご'],
     'bean_sprouts': ['もやし', 'モヤシ'],
     'cabbage':      ['キャベツ'],
@@ -26,9 +25,13 @@ PRODUCT_KEYWORDS = {
     'pasta':        ['パスタ', 'スパゲッティ'],
     'rice':         ['お米', '白米', 'こしひかり', 'ひとめぼれ'],
     'frozen_veg':   ['冷凍野菜', '冷凍ミックス'],
+    'sausage':      ['ウインナー', 'ソーセージ', 'フランク'],
+    'ham_bacon':    ['ロースハム', 'ベーコン', 'ハーフベーコン'],
+    'natto':        ['納豆'],
+    'bread':        ['食パン', 'パン'],
 }
 
-HEADERS = {
+FETCH_HEADERS = {
     'User-Agent': (
         'Mozilla/5.0 (Windows NT 10.0; Win64; x64) '
         'AppleWebKit/537.36 (KHTML, like Gecko) '
@@ -40,115 +43,108 @@ HEADERS = {
 }
 
 BASE = 'https://www.gyomusuper.jp'
+REGION = 'west'  # hokkaido / east（南関東） / west（近畿） / kyusyu（九州）
 
-# ★ お住まいの地域に合わせて変更してください
-# hokkaido / east（南関東） / west（近畿） / kyusyu（九州）
-REGION = 'west'
-
-def match_product(text):
-    for prod_id, keywords in PRODUCT_KEYWORDS.items():
-        if any(kw in text for kw in keywords):
-            return prod_id
-    return None
-
-def parse_ocr_text(text):
-    """OCRテキストから商品名・価格ペアを抽出"""
-    items = []
-    seen = set()
-    lines = [l.strip() for l in text.split('\n') if l.strip()]
-
-    for i, line in enumerate(lines):
-        prod_id = match_product(line)
-        if not prod_id or prod_id in seen:
-            continue
-        # 前後2行の範囲で価格を探す
-        context = ' '.join(lines[max(0, i-2):min(len(lines), i+3)])
-        prices = [int(p) for p in re.findall(r'(\d{2,5})\s*円', context)
-                  if 50 <= int(p) <= 5000]
-        if prices:
-            items.append({
-                'productId': prod_id,
-                'salePrice': min(prices),
-                'raw': line[:60],
-            })
-            seen.add(prod_id)
-
-    return items
-
-def get_image_urls(soup, page_url):
-    """ページ内のチラシ画像URLを取得（相対パスを正しく解決）"""
+def get_flyer_image_urls(session):
+    page_url = f'{BASE}/bargain/'
+    resp = session.get(page_url, headers=FETCH_HEADERS, timeout=30)
+    resp.raise_for_status()
+    soup = BeautifulSoup(resp.text, 'html.parser')
     urls = []
     for img in soup.find_all('img'):
         src = img.get('src') or img.get('data-src') or ''
         if not src:
             continue
         absolute = urljoin(page_url, src)
-        # 指定地域のチラシ画像のみ対象
         if f'bargain_{REGION}_' in absolute and re.search(r'\.(jpg|jpeg|png)', absolute, re.I):
             urls.append(absolute)
     return urls
 
-def ocr_image(session, img_url):
-    """画像をダウンロードしてOCR"""
-    try:
-        resp = session.get(img_url, headers=HEADERS, timeout=30)
-        resp.raise_for_status()
-        img = Image.open(io.BytesIO(resp.content))
-        # 小さいアイコン類はスキップ
-        if img.width < 300 or img.height < 300:
-            return ''
-        # 大きすぎる場合は縮小（速度優先）
-        if img.width > 1500:
-            ratio = 1500 / img.width
-            img = img.resize((1500, int(img.height * ratio)), Image.LANCZOS)
-        # 小さい画像は2倍に拡大してOCR精度を上げる
-        if img.width < 1000:
-            img = img.resize((img.width * 2, img.height * 2), Image.LANCZOS)
-        text = pytesseract.image_to_string(img, lang='jpn')
-        print(f'  OCR完了 ({img.width}x{img.height}): {len(text)}文字取得')
-        print(f'  --- OCRテキスト先頭300文字 ---')
-        print(text[:300])
-        print(f'  --- ここまで ---')
-        return text
-    except Exception as e:
-        print(f'  スキップ ({img_url[-40:]}): {e}')
-        return ''
+def analyze_image_with_claude(client, image_data, media_type='image/jpeg'):
+    """Claude APIで画像からセール商品を抽出"""
+    image_b64 = base64.standard_b64encode(image_data).decode()
+    message = client.messages.create(
+        model='claude-haiku-4-5-20251001',
+        max_tokens=1024,
+        messages=[{
+            'role': 'user',
+            'content': [
+                {
+                    'type': 'image',
+                    'source': {
+                        'type': 'base64',
+                        'media_type': media_type,
+                        'data': image_b64,
+                    },
+                },
+                {
+                    'type': 'text',
+                    'text': (
+                        'この業務スーパーのチラシ画像から、セール商品の情報をすべて読み取ってください。\n'
+                        '以下のJSON形式で返してください（他の文字は不要）：\n'
+                        '[{"name": "商品名", "price": 価格（税抜き・整数）}, ...]\n'
+                        '価格が読み取れない商品は含めないでください。'
+                    ),
+                },
+            ],
+        }],
+    )
+    return message.content[0].text
+
+def match_product(name):
+    for prod_id, keywords in PRODUCT_KEYWORDS.items():
+        if any(kw in name for kw in keywords):
+            return prod_id
+    return None
 
 def fetch():
     session = requests.Session()
     try:
-        session.get(f'{BASE}/', headers=HEADERS, timeout=20)
+        session.get(f'{BASE}/', headers=FETCH_HEADERS, timeout=20)
     except Exception:
         pass
 
-    items = []
+    client = anthropic.Anthropic()
+    all_raw_items = []
+    matched_items = []
     success = False
     message = ''
 
     try:
-        resp = session.get(f'{BASE}/bargain/', headers=HEADERS, timeout=30)
-        resp.raise_for_status()
-        soup = BeautifulSoup(resp.text, 'html.parser')
+        image_urls = get_flyer_image_urls(session)
+        print(f'チラシ画像: {len(image_urls)}件')
 
-        page_url = f'{BASE}/bargain/'
-        image_urls = get_image_urls(soup, page_url)
-        print(f'画像URL発見: {len(image_urls)}件')
-        for u in image_urls:
-            print(f'  {u}')
-
-        # 全画像をOCR
-        all_ocr_text = ''
         for img_url in image_urls:
-            all_ocr_text += ocr_image(session, img_url) + '\n'
+            print(f'  解析中: {img_url.split("/")[-1]}')
+            resp = session.get(img_url, headers=FETCH_HEADERS, timeout=30)
+            resp.raise_for_status()
 
-        # デバッグ用にOCR結果を保存
-        with open('debug_ocr.txt', 'w', encoding='utf-8') as f:
-            f.write(f'画像数: {len(image_urls)}\n\n')
-            f.write(all_ocr_text)
+            raw_text = analyze_image_with_claude(client, resp.content)
+            print(f'  Claude応答: {raw_text[:200]}')
 
-        items = parse_ocr_text(all_ocr_text)
+            # JSONを抽出
+            json_match = re.search(r'\[.*\]', raw_text, re.DOTALL)
+            if not json_match:
+                print('  JSONが見つかりませんでした')
+                continue
+
+            items = json.loads(json_match.group())
+            for item in items:
+                name = item.get('name', '')
+                price = item.get('price')
+                if not name or not price:
+                    continue
+                all_raw_items.append({'name': name, 'price': int(price)})
+                prod_id = match_product(name)
+                if prod_id:
+                    matched_items.append({
+                        'productId': prod_id,
+                        'salePrice': int(price),
+                        'raw': name,
+                    })
+
         success = True
-        message = f'OCR取得成功: {len(items)}件マッチ'
+        message = f'Claude解析完了: {len(all_raw_items)}品取得、{len(matched_items)}品マッチ'
         print(message)
 
     except Exception as e:
@@ -159,13 +155,14 @@ def fetch():
         'updated': datetime.now().strftime('%Y-%m-%d'),
         'success': success,
         'message': message,
-        'items': items,
+        'items': matched_items,
+        'allSaleItems': all_raw_items,
     }
 
     with open('sale_data.json', 'w', encoding='utf-8') as f:
         json.dump(result, f, ensure_ascii=False, indent=2)
 
-    print(f'完了: {len(items)}件')
+    print(f'完了: {len(matched_items)}件マッチ')
 
 if __name__ == '__main__':
     fetch()
