@@ -281,11 +281,51 @@
             font-weight: bold;
         }
 
+        /* 今週のセール品一覧 */
+        .all-sale-section {
+            background: white;
+            border-radius: 14px;
+            padding: 24px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+            display: none;
+        }
+
+        .all-sale-section.visible { display: block; }
+
+        .sale-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 8px;
+            margin-top: 4px;
+        }
+
+        .sale-item-card {
+            background: #fff8f8;
+            border: 1px solid #ffcdd2;
+            border-radius: 8px;
+            padding: 10px 12px;
+        }
+
+        .sale-item-name {
+            font-size: 0.85rem;
+            color: #333;
+            margin-bottom: 4px;
+            line-height: 1.4;
+        }
+
+        .sale-item-price {
+            font-size: 1rem;
+            font-weight: bold;
+            color: #e53935;
+        }
+
         /* Responsive */
         @media (max-width: 500px) {
             header h1 { font-size: 1.4rem; }
             .meal-grid { grid-template-columns: repeat(2, 1fr); }
             .total-amount { font-size: 2.2rem; }
+            .sale-grid { grid-template-columns: repeat(2, 1fr); }
         }
     </style>
 </head>
@@ -302,6 +342,11 @@
         <div class="sale-dot fail" id="saleDot"></div>
         <div class="sale-banner-text" id="saleBannerText">セール情報を読み込み中...</div>
         <div class="sale-banner-date" id="saleBannerDate"></div>
+    </div>
+
+    <div class="all-sale-section" id="allSaleSection">
+        <div class="section-title">🏷️ 今週の業務スーパーセール品</div>
+        <div class="sale-grid" id="allSaleGrid"></div>
     </div>
 
     <div class="controls">
@@ -498,16 +543,37 @@
 
             dateEl.textContent = data.updated ? `更新日: ${data.updated}` : '';
 
-            if (data.success && data.items && data.items.length > 0) {
+            // 献立マッチ品を価格マップに登録
+            if (data.items && data.items.length > 0) {
                 data.items.forEach(item => {
                     if (item.productId && item.salePrice) {
                         salePrices[item.productId] = item.salePrice;
                     }
                 });
-                const count = Object.keys(salePrices).length;
+            }
+
+            // 今週のセール品一覧を表示
+            const allItems = data.allSaleItems || [];
+            if (data.success && allItems.length > 0) {
+                const grid = document.getElementById('allSaleGrid');
+                grid.innerHTML = '';
+                allItems.forEach(item => {
+                    const card = document.createElement('div');
+                    card.className = 'sale-item-card';
+                    card.innerHTML = `
+                        <div class="sale-item-name">${item.name}</div>
+                        <div class="sale-item-price">¥${item.price.toLocaleString()}</div>
+                    `;
+                    grid.appendChild(card);
+                });
+                document.getElementById('allSaleSection').classList.add('visible');
+
+                const matchCount = Object.keys(salePrices).length;
                 banner.className = 'sale-banner ok';
                 dot.className    = 'sale-dot ok';
-                text.textContent = `🏷️ 今週のセール情報を反映中（${count}品目）`;
+                text.textContent = matchCount > 0
+                    ? `🏷️ 今週${allItems.length}品がセール中（うち${matchCount}品を献立に反映）`
+                    : `🏷️ 今週${allItems.length}品がセール中（献立対象品はなし）`;
             } else {
                 banner.className = 'sale-banner fail';
                 dot.className    = 'sale-dot fail';
