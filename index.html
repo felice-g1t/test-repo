@@ -98,10 +98,12 @@ header p{font-size:0.9rem;opacity:0.85}
 .pm-cat{padding:4px 10px;border:1.5px solid #ccc;border-radius:20px;font-size:0.75rem;cursor:pointer;background:white;color:#666}
 .pm-cat.active{background:#2d7a3a;color:white;border-color:#2d7a3a}
 .pm-list{max-height:48vh;overflow-y:auto;border:1px solid #eee;border-radius:8px}
-.pm-item{display:flex;align-items:center;gap:10px;padding:9px 12px;border-bottom:1px solid #f0f0f0;cursor:pointer;transition:background 0.15s}
+.pm-item{display:flex;align-items:center;gap:8px;padding:9px 12px;border-bottom:1px solid #f0f0f0;transition:background 0.15s}
 .pm-item:last-child{border-bottom:none}
 .pm-item:hover{background:#f8fdf8}
-.pm-item.hidden-product{background:#fafafa;opacity:0.5}
+.pm-item.hidden-product{background:#fafafa}
+.pm-item.hidden-product .pm-name{opacity:0.4;text-decoration:line-through}
+.pm-item.hidden-product .pm-meta{opacity:0.35}
 .pm-toggle{width:36px;height:20px;border-radius:10px;background:#2d7a3a;position:relative;flex-shrink:0;transition:background 0.2s}
 .pm-toggle::after{content:'';position:absolute;top:3px;left:3px;width:14px;height:14px;border-radius:50%;background:white;transition:left 0.2s}
 .pm-toggle.off{background:#ccc}
@@ -178,6 +180,15 @@ header p{font-size:0.9rem;opacity:0.85}
 .img-popup-close:hover{color:#333}
 .has-img{cursor:pointer;text-decoration:underline dotted #a5d6a7;color:#1a5c26}
 .has-img:hover{color:#2d7a3a;text-decoration:underline #2d7a3a}
+.pm-btn-group{display:flex;gap:3px;flex-shrink:0}
+.pm-act-btn{font-size:0.7rem;cursor:pointer;padding:3px 7px;border-radius:5px;border:1.5px solid #e0e0e0;background:none;color:#aaa;line-height:1.4;transition:all 0.15s;white-space:nowrap}
+.pm-act-btn:hover{border-color:#bbb;color:#555;background:#f5f5f5}
+.pm-act-fav.fav{border-color:#f5a623!important;color:#f5a623!important;background:#fffbf0!important}
+.pm-act-req.active{border-color:#8b5cf6!important;color:#8b5cf6!important;background:#f5f0ff!important}
+.pm-act-hide.hiding{border-color:#e53935!important;color:#e53935!important;background:#fff5f5!important}
+.undo-bar{font-size:0.8rem;color:#aaa;padding:8px 0 2px;text-align:center;display:none}
+.undo-bar.visible{display:block}
+.undo-link{color:#2d7a3a;cursor:pointer;font-weight:bold;text-decoration:underline;margin-left:5px}
 </style>
 </head>
 <body>
@@ -300,7 +311,7 @@ header p{font-size:0.9rem;opacity:0.85}
     </div>
     <button class="btn-generate" onclick="generate()">🍽️ 献立を考える</button>
     <button class="btn-req-open" onclick="openReqModal()">⭐ お気に入り・今週のリクエスト</button>
-    <button class="btn-product-mgr" onclick="openProductManager()">🗂️ 近くのお店にない商品・不要な商品を除外する</button>
+    <button class="btn-product-mgr" onclick="openProductManager()">📦 全商品一覧（お気に入り・リクエスト・除外）</button>
   </div>
 
   <div class="section" id="mealSection">
@@ -311,6 +322,7 @@ header p{font-size:0.9rem;opacity:0.85}
   <div class="section" id="shoppingSection">
     <div class="section-title">🛒 1週間分 買い物リスト</div>
     <div id="shoppingList"></div>
+    <div id="shoppingUndoBar" class="undo-bar"></div>
   </div>
 
   <div class="total-section" id="totalSection">
@@ -325,8 +337,8 @@ header p{font-size:0.9rem;opacity:0.85}
 <div class="modal-overlay" id="productManagerModal" onclick="closePMOverlay(event)">
   <div class="modal pm-modal">
     <button class="modal-close" onclick="closeProductManager()">✕</button>
-    <div class="modal-title" style="margin-bottom:4px">🗂️ 商品の除外設定</div>
-    <p style="font-size:0.78rem;color:#999;margin-bottom:12px">スイッチをオフにすると献立・買い物リストから除外されます（いつでも元に戻せます）</p>
+    <div class="modal-title" style="margin-bottom:4px">📦 全商品一覧</div>
+    <p style="font-size:0.78rem;color:#999;margin-bottom:12px">⭐お気に入り登録 ／ ＋使う：今週のリクエストに追加 ／ 非表示：献立・買い物リストから除外（いつでも戻せます）</p>
     <input class="pm-search" id="pmSearch" type="text" placeholder="商品名で検索..." oninput="filterPM()">
     <div class="pm-cats" id="pmCats"></div>
     <div class="pm-list" id="pmList"></div>
@@ -839,6 +851,7 @@ let skippedProductsThisGen = new Set(); // 今回✕で消したお気に入り�
 let requestedMealNames  = []; // 今週リクエストされた献立名
 let requestedProductIds = []; // 今週リクエストされた商品ID
 let rqActiveTab = 1;
+let removedShoppingItems = [];
 
 async function loadProductData() {
   try {
@@ -907,14 +920,22 @@ function filterPM() {
     return;
   }
   list.innerHTML = filtered.map(p => {
-    const hidden = hiddenProductIds.has(p.id);
-    return '<div class="pm-item' + (hidden ? ' hidden-product' : '') + '" onclick="toggleProduct(\'' + p.id + '\')">' +
-      '<div class="pm-toggle' + (hidden ? ' off' : '') + '"></div>' +
+    const isFav    = favoriteProducts.has(p.id);
+    const isReq    = requestedProductIds.includes(p.id);
+    const isHidden = hiddenProductIds.has(p.id);
+    const hasImg   = !!productImages[p.id];
+    const nameAttr = hasImg ? ' class="has-img" onclick="showProductImage(\'' + p.id + '\')" title="画像を見る"' : '';
+    return '<div class="pm-item' + (isHidden ? ' hidden-product' : '') + '">' +
       '<div class="pm-name">' +
         (p.category ? '<span class="pm-cat-badge">' + p.category + '</span>' : '') +
-        p.name +
+        '<span' + nameAttr + '>' + p.name + '</span>' +
       '</div>' +
       '<div class="pm-meta">' + (p.amount || '') + (p.price ? ' ¥' + p.price : '') + '</div>' +
+      '<div class="pm-btn-group">' +
+        '<button class="pm-act-btn pm-act-fav' + (isFav ? ' fav' : '') + '" onclick="toggleFavProd(\'' + p.id + '\',event)" title="' + (isFav ? 'お気に入り解除' : 'お気に入りに追加') + '">' + (isFav ? '⭐' : '☆') + '</button>' +
+        '<button class="pm-act-btn pm-act-req' + (isReq ? ' active' : '') + '" onclick="reqProductFromPM(\'' + p.id + '\')" title="今週の買い物リストにリクエスト">' + (isReq ? '✓使う' : '＋使う') + '</button>' +
+        '<button class="pm-act-btn pm-act-hide' + (isHidden ? ' hiding' : '') + '" onclick="toggleProduct(\'' + p.id + '\')" title="' + (isHidden ? '除外を解除して表示' : '非表示にする') + '">' + (isHidden ? '戻す' : '非表示') + '</button>' +
+      '</div>' +
     '</div>';
   }).join('');
 }
@@ -926,6 +947,15 @@ function toggleProduct(id) {
     hiddenProductIds.add(id);
   }
   localStorage.setItem('hiddenProducts', JSON.stringify([...hiddenProductIds]));
+  filterPM();
+}
+
+function reqProductFromPM(id) {
+  if (requestedProductIds.includes(id)) {
+    requestedProductIds = requestedProductIds.filter(i => i !== id);
+  } else {
+    requestedProductIds.push(id);
+  }
   filterPM();
 }
 
@@ -1068,12 +1098,44 @@ function removeShoppingItem(btn) {
   const item = btn.closest('.shopping-item');
   const id = item.dataset.productId;
   if (id && favoriteProducts.has(id)) skippedProductsThisGen.add(id);
+  removedShoppingItems.push({outerHTML: item.outerHTML, cost: parseFloat(item.dataset.cost) || 0});
   item.remove();
   let total = 0;
   document.querySelectorAll('#shoppingList .shopping-item').forEach(el => {
     total += parseFloat(el.dataset.cost) || 0;
   });
   document.getElementById('totalAmount').textContent = '¥' + total.toLocaleString();
+  updateUndoBar();
+}
+
+function updateUndoBar() {
+  const bar = document.getElementById('shoppingUndoBar');
+  if (!bar) return;
+  if (removedShoppingItems.length === 0) {
+    bar.className = 'undo-bar';
+    bar.innerHTML = '';
+  } else {
+    bar.className = 'undo-bar visible';
+    bar.innerHTML = removedShoppingItems.length + '件を非表示中<span class="undo-link" onclick="undoShoppingRemove()">元に戻す</span>';
+  }
+}
+
+function undoShoppingRemove() {
+  if (removedShoppingItems.length === 0) return;
+  const list = document.getElementById('shoppingList');
+  let total = 0;
+  document.querySelectorAll('#shoppingList .shopping-item').forEach(el => {
+    total += parseFloat(el.dataset.cost) || 0;
+  });
+  for (const saved of removedShoppingItems) {
+    const wrap = document.createElement('div');
+    wrap.innerHTML = saved.outerHTML;
+    list.appendChild(wrap.firstChild);
+    total += saved.cost;
+  }
+  removedShoppingItems = [];
+  document.getElementById('totalAmount').textContent = '¥' + total.toLocaleString();
+  updateUndoBar();
 }
 
 function closeModal() {
@@ -1194,6 +1256,7 @@ function toggleFavProd(id, event) {
     btn.title = on ? 'お気に入り済み（タップで解除）' : 'お気に入りに追加';
   }
   renderFavProds();
+  if (document.getElementById('productManagerModal').classList.contains('open')) filterPM();
 }
 
 function renderFavMeals() {
@@ -1342,6 +1405,9 @@ function formatUsage(consumed, amountStr) {
 }
 
 function rebuildShopping() {
+  removedShoppingItems = [];
+  updateUndoBar();
+  const today = new Date().toISOString().slice(0,10);
   const consumption = {};
   for (const day of currentPlan) {
     const pf = (day.effectivePersons > 0 ? day.effectivePersons : 1) / 2;
@@ -1387,7 +1453,9 @@ function rebuildShopping() {
         '<button class="btn-fav-prod' + (isFavProd ? ' fav' : '') + '" onclick="toggleFavProd(\'' + id + '\',event)" title="' + (isFavProd ? 'お気に入り済み' : 'お気に入りに追加') + '">' + (isFavProd ? '⭐' : '☆') + '</button>' +
         '<button class="item-delete" onclick="removeShoppingItem(this)" title="今回は不要">✕</button>';
       listEl.appendChild(item);
+      if (favoriteProducts.has(id)) productLastShown[id] = today;
     });
+  localStorage.setItem('productLastShown', JSON.stringify(productLastShown));
 
   // お気に入り商品（期限切れ）とリクエスト商品を追加
   const shownIds = new Set(Object.keys(consumption).filter(id => products[id]));
