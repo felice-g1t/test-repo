@@ -1,6 +1,6 @@
 {
   "updated": "2026-06-20",
-  "success": false,
-  "message": "初期データです。GitHub Actionsが実行されるとセール情報が更新されます。",
+  "success": true,
+  "message": "取得成功: 0件マッチ (https://www.gyomusuper.jp/bargain/)",
   "items": []
 }
