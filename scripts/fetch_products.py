@@ -66,11 +66,40 @@ def make_id(name: str, seen: set) -> str:
     return cand
 
 
+def extract_image_map(soup, base: str) -> dict:
+    """Return alt_text -> absolute_image_url mapping from page."""
+    img_map = {}
+    for img in soup.find_all('img'):
+        src = img.get('src') or img.get('data-src') or ''
+        alt = (img.get('alt') or '').strip()
+        if not src or not alt or len(alt) < 2:
+            continue
+        if src.startswith('//'):
+            src = 'https:' + src
+        elif src.startswith('/'):
+            src = base + src
+        elif not src.startswith('http'):
+            continue
+        img_map[alt] = src
+    return img_map
+
+
+def match_image(name: str, img_map: dict) -> str:
+    """Return image URL for product name, or empty string."""
+    if name in img_map:
+        return img_map[name]
+    for alt, src in img_map.items():
+        if name in alt or alt in name:
+            return src
+    return ''
+
+
 def fetch_category_products(session, client, url: str, category: str) -> list:
     try:
         resp = session.get(url, headers=FETCH_HEADERS, timeout=30)
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, 'html.parser')
+        img_map = extract_image_map(soup, BASE)
         text = soup.get_text(separator='\n', strip=True)[:8000]
 
         message = client.messages.create(
@@ -94,7 +123,15 @@ def fetch_category_products(session, client, url: str, category: str) -> list:
         if not match:
             return []
         items = json.loads(match.group())
-        return [i for i in items if i.get('name') and len(i['name']) >= 2]
+        result = []
+        for item in items:
+            if not item.get('name') or len(item['name']) < 2:
+                continue
+            img_url = match_image(item['name'].strip(), img_map)
+            if img_url:
+                item['image_url'] = img_url
+            result.append(item)
+        return result
     except Exception as e:
         print(f'  エラー ({url}): {e}')
         return []
@@ -131,25 +168,32 @@ def fetch():
             seen_names.add(name)
             pid = make_id(name, seen_ids)
             seen_ids.add(pid)
-            all_products.append({
+            entry = {
                 'id': pid,
                 'name': name,
                 'amount': str(item.get('amount', '') or ''),
                 'price': int(item.get('price', 0) or 0),
                 'category': category,
-            })
+            }
+            if item.get('image_url'):
+                entry['image_url'] = item['image_url']
+            all_products.append(entry)
 
     if not all_products:
         print('商品を取得できませんでした。既存データを維持します。')
         return
 
-    # 既存 products_data.json とマージ（新規追加のみ、既存IDは上書きしない）
+    # 既存 products_data.json とマージ（image_url は更新、価格等は新規のみ追加）
     try:
         with open('products_data.json', 'r', encoding='utf-8') as f:
             existing = json.load(f)
-        existing_ids = {p['id'] for p in existing.get('products', [])}
+        existing_map = {p['id']: p for p in existing.get('products', [])}
         for p in all_products:
-            if p['id'] not in existing_ids:
+            if p['id'] in existing_map:
+                # image_url が新たに取得できた場合だけ更新
+                if p.get('image_url') and not existing_map[p['id']].get('image_url'):
+                    existing_map[p['id']]['image_url'] = p['image_url']
+            else:
                 existing['products'].append(p)
         merged = existing
     except Exception:

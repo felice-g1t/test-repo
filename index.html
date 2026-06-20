@@ -135,6 +135,16 @@ header p{font-size:0.9rem;opacity:0.85}
   .day-card-meals{flex-direction:column}
   .meal-card{max-width:100%}
 }
+.img-popup-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.72);z-index:200;align-items:center;justify-content:center}
+.img-popup-overlay.open{display:flex}
+.img-popup{background:white;border-radius:16px;padding:22px 20px 18px;max-width:340px;width:90%;text-align:center;position:relative}
+.img-popup img{max-width:100%;max-height:240px;object-fit:contain;border-radius:8px;margin-bottom:10px;display:block;margin-left:auto;margin-right:auto}
+.img-popup-name{font-weight:bold;font-size:1rem;color:#333;margin-bottom:4px}
+.img-popup-amount{font-size:0.82rem;color:#999}
+.img-popup-close{position:absolute;top:10px;right:14px;font-size:1.4rem;cursor:pointer;color:#aaa;background:none;border:none;line-height:1}
+.img-popup-close:hover{color:#333}
+.has-img{cursor:pointer;text-decoration:underline dotted #a5d6a7;color:#1a5c26}
+.has-img:hover{color:#2d7a3a;text-decoration:underline #2d7a3a}
 </style>
 </head>
 <body>
@@ -304,6 +314,15 @@ header p{font-size:0.9rem;opacity:0.85}
     <div class="modal-sec">作り方</div>
     <ol class="recipe-steps" id="mRecipe"></ol>
     <div id="mSides"></div>
+  </div>
+</div>
+
+<div class="img-popup-overlay" id="imgPopup" onclick="closeImgPopup()">
+  <div class="img-popup" onclick="event.stopPropagation()">
+    <button class="img-popup-close" onclick="closeImgPopup()">✕</button>
+    <img id="imgPopupImg" src="" alt="">
+    <div class="img-popup-name" id="imgPopupName"></div>
+    <div class="img-popup-amount" id="imgPopupAmount"></div>
   </div>
 </div>
 
@@ -590,6 +609,7 @@ let fetchedRecipes = [];
 let productCatalog = []; // products_data.json から読み込んだ全商品
 let hiddenProductIds = new Set(JSON.parse(localStorage.getItem('hiddenProducts') || '[]'));
 let currentPlan = [];
+let productImages = {}; // id → image_url
 let pmActiveCategory = 'すべて';
 
 async function loadProductData() {
@@ -602,6 +622,7 @@ async function loadProductData() {
       data.products.forEach(p => {
         if (p.id && p.name) {
           products[p.id] = products[p.id] || {name: p.name, amount: p.amount || '', price: p.price || 0};
+          if (p.image_url) productImages[p.id] = p.image_url;
         }
       });
     }
@@ -762,7 +783,14 @@ function openModal(meal, sides) {
   document.getElementById('mIcon').textContent = meal.icon;
   document.getElementById('mTitle').textContent = meal.name;
   document.getElementById('mIngr').innerHTML = Object.keys(meal.ingredients)
-    .map(id => products[id] ? '<span style="display:inline-block;background:#e8f5e9;border-radius:5px;padding:3px 8px;margin:3px;font-size:0.83rem;">' + products[id].name + '</span>' : '')
+    .map(id => {
+      if (!products[id]) return '';
+      const hasImg = !!productImages[id];
+      const extra = hasImg
+        ? ' class="has-img" onclick="showProductImage(\'' + id + '\')" title="画像を見る"'
+        : '';
+      return '<span style="display:inline-block;background:#e8f5e9;border-radius:5px;padding:3px 8px;margin:3px;font-size:0.83rem;"' + extra + '>' + products[id].name + '</span>';
+    })
     .join('');
   document.getElementById('mRecipe').innerHTML = meal.recipe
     .map((s,i) => '<li><span class="step-num">' + (i+1) + '</span><span>' + s + '</span></li>')
@@ -797,6 +825,19 @@ function closeModal() {
 }
 function closeModalOverlay(e) {
   if (e.target === document.getElementById('recipeModal')) closeModal();
+}
+
+function showProductImage(id) {
+  const url = productImages[id];
+  if (!url) return;
+  const prod = products[id];
+  document.getElementById('imgPopupImg').src = url;
+  document.getElementById('imgPopupName').textContent = prod ? prod.name : '';
+  document.getElementById('imgPopupAmount').textContent = prod ? prod.amount : '';
+  document.getElementById('imgPopup').classList.add('open');
+}
+function closeImgPopup() {
+  document.getElementById('imgPopup').classList.remove('open');
 }
 
 function isBlocked(meal) {
@@ -931,8 +972,11 @@ function rebuildShopping() {
       item.className = 'shopping-item';
       item.dataset.cost = cost;
       const usageText = formatUsage(consumed, prod.amount);
+      const hasImg = !!productImages[id];
+      const nameClass = 'item-name' + (hasImg ? ' has-img' : '');
+      const nameOnclick = hasImg ? ' onclick="showProductImage(\'' + id + '\')" title="画像を見る"' : '';
       item.innerHTML =
-        '<div class="item-left"><div class="item-name">' + prod.name + saleBadge + '</div><div class="item-detail">' + prod.amount + '</div><div class="item-usage">使用量: 約' + usageText + '</div></div>' +
+        '<div class="item-left"><div class="' + nameClass + '"' + nameOnclick + '>' + prod.name + saleBadge + '</div><div class="item-detail">' + prod.amount + '</div><div class="item-usage">使用量: 約' + usageText + '</div></div>' +
         '<div class="item-right"><div class="item-qty">' + packs + '個</div><div class="item-price">' + priceHtml + ' × ' + packs + '</div></div>' +
         '<button class="item-delete" onclick="removeShoppingItem(this)" title="今回は不要">✕</button>';
       listEl.appendChild(item);
