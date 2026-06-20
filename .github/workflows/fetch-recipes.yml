@@ -1,0 +1,48 @@
+name: 業務スーパー レシピ情報取得
+
+on:
+  schedule:
+    - cron: '0 12 * * 0'  # 毎週日曜 21:00 JST (12:00 UTC)
+  workflow_dispatch:       # 手動実行ボタン
+
+permissions:
+  contents: write
+
+jobs:
+  fetch:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: リポジトリをチェックアウト
+        uses: actions/checkout@v4
+
+      - name: Python セットアップ
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Python パッケージをインストール
+        run: pip install requests beautifulsoup4 anthropic
+
+      - name: レシピ情報を取得
+        env:
+          ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}
+        run: python scripts/fetch_recipes.py
+
+      - name: デバッグファイルを保存
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: debug-recipes
+          path: debug_recipes.txt
+          if-no-files-found: ignore
+
+      - name: 変更があればコミット & プッシュ
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add recipe_data.json
+          git diff --staged --quiet && echo "変更なし" || (
+            git commit -m "レシピ情報を更新 $(date +'%Y-%m-%d')" &&
+            git push
+          )

@@ -43,6 +43,10 @@ header p{font-size:0.9rem;opacity:0.85}
 .meal-card .meal-desc{font-size:0.72rem;color:#888;line-height:1.45}
 .meal-card .side-info{font-size:0.7rem;color:#b08000;margin-top:4px}
 .meal-card .recipe-hint{font-size:0.65rem;color:#bbb;margin-top:5px}
+.meal-card.official{background:#faf0ff;border-color:#ce93d8}
+.official-badge{background:#7b1fa2;color:white;font-size:0.66rem;font-weight:bold;padding:2px 6px;border-radius:4px;margin-left:5px;vertical-align:middle}
+.recipe-link{display:inline-block;margin-top:6px;font-size:0.72rem;color:#7b1fa2;text-decoration:none;border-bottom:1px dashed #ce93d8}
+.recipe-link:hover{color:#4a148c}
 .shopping-item{display:flex;justify-content:space-between;align-items:center;padding:12px 8px;border-bottom:1px solid #f0f0f0;transition:background 0.15s}
 .shopping-item:last-child{border-bottom:none}
 .shopping-item:hover{background:#f8fdf8;border-radius:6px}
@@ -116,6 +120,12 @@ header p{font-size:0.9rem;opacity:0.85}
   <div class="all-sale-section" id="allSaleSection">
     <div class="section-title">🏷️ 今週の業務スーパーセール品</div>
     <div class="sale-grid" id="allSaleGrid"></div>
+  </div>
+
+  <div class="sale-banner" id="recipeBanner" style="display:none;border-left:4px solid #7b1fa2;">
+    <div class="sale-dot" style="background:#7b1fa2;"></div>
+    <div class="sale-banner-text" id="recipeBannerText"></div>
+    <div class="sale-banner-date" id="recipeBannerDate"></div>
   </div>
 
   <div class="controls">
@@ -446,6 +456,7 @@ const breakfastMeals = [
 ];
 
 let salePrices = {};
+let fetchedRecipes = [];
 
 async function loadSaleData() {
   const banner = document.getElementById('saleBanner');
@@ -485,6 +496,31 @@ async function loadSaleData() {
   }
 }
 loadSaleData();
+
+async function loadRecipeData() {
+  try {
+    const res  = await fetch('./recipe_data.json?_=' + Date.now());
+    const data = await res.json();
+    if (data.success && data.recipes && data.recipes.length > 0) {
+      fetchedRecipes = data.recipes.map(r => ({
+        name: r.name,
+        icon: '✨',
+        desc: '業務スーパー公式 ' + (r.category || 'レシピ'),
+        ingredients: {},
+        recipe: ['業務スーパー公式レシピページをご確認ください'],
+        url: r.url,
+        isOfficial: true,
+      }));
+      const banner = document.getElementById('recipeBanner');
+      banner.style.display = 'flex';
+      document.getElementById('recipeBannerText').textContent =
+        '✨ 業スー公式レシピ ' + fetchedRecipes.length + '件を献立に活用中（夕食に1品は公式レシピを組み込みます）';
+      document.getElementById('recipeBannerDate').textContent =
+        data.updated ? '更新日: ' + data.updated : '';
+    }
+  } catch(e) { /* silent */ }
+}
+loadRecipeData();
 
 function pickRandom(arr, n) {
   const result = [], pool = [...arr];
@@ -556,6 +592,13 @@ function generate() {
     const picks = {};
     for (const mt of mealTypes) picks[mt.label] = pickRandom(mt.pool, slot.days);
 
+    // 夕食スロットがあれば1日分を公式レシピに差し替え
+    const dinnerSlot = mealTypes.find(mt => mt.isDinner);
+    if (dinnerSlot && fetchedRecipes.length > 0 && slot.days >= 1) {
+      const official = fetchedRecipes[Math.floor(Math.random() * fetchedRecipes.length)];
+      picks[dinnerSlot.label][0] = official;
+    }
+
     for (let d = 0; d < slot.days; d++) {
       const dayBlock = document.createElement('div');
       dayBlock.className = 'day-block';
@@ -578,14 +621,18 @@ function generate() {
           }
         }
         const card = document.createElement('div');
-        card.className = 'meal-card';
+        card.className = 'meal-card' + (meal.isOfficial ? ' official' : '');
+        const officialBadge = meal.isOfficial ? '<span class="official-badge">業スー公式</span>' : '';
+        const recipeLink = meal.isOfficial && meal.url
+          ? '<a class="recipe-link" href="' + meal.url + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">公式レシピを見る ↗</a>'
+          : '<div class="recipe-hint">タップでレシピを見る</div>';
         card.innerHTML =
           '<div class="type-label">' + mt.label + '</div>' +
           '<div class="meal-icon">' + meal.icon + '</div>' +
-          '<div class="meal-name">' + meal.name + '</div>' +
+          '<div class="meal-name">' + meal.name + officialBadge + '</div>' +
           '<div class="meal-desc">' + meal.desc + '</div>' +
           (sides.length > 0 ? '<div class="side-info">副菜: ' + sides.map(s => s.name).join('・') + '</div>' : '') +
-          '<div class="recipe-hint">タップでレシピを見る</div>';
+          recipeLink;
         card.onclick = () => openModal(meal, sides);
         dayMeals.appendChild(card);
       }
