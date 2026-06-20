@@ -101,8 +101,14 @@ def ocr_image(session, img_url):
         if img.width > 1500:
             ratio = 1500 / img.width
             img = img.resize((1500, int(img.height * ratio)), Image.LANCZOS)
+        # 小さい画像は2倍に拡大してOCR精度を上げる
+        if img.width < 1000:
+            img = img.resize((img.width * 2, img.height * 2), Image.LANCZOS)
         text = pytesseract.image_to_string(img, lang='jpn')
         print(f'  OCR完了 ({img.width}x{img.height}): {len(text)}文字取得')
+        print(f'  --- OCRテキスト先頭300文字 ---')
+        print(text[:300])
+        print(f'  --- ここまで ---')
         return text
     except Exception as e:
         print(f'  スキップ ({img_url[-40:]}): {e}')
