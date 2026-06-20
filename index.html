@@ -13,28 +13,26 @@ header p{font-size:0.9rem;opacity:0.85}
 .container{max-width:960px;margin:0 auto;padding:24px 16px}
 .controls{background:white;border-radius:14px;padding:24px;margin-bottom:24px;box-shadow:0 2px 10px rgba(0,0,0,0.07)}
 .controls h2{font-size:1rem;color:#2d7a3a;margin-bottom:16px;font-weight:bold}
-.slots-area{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
-.slot-row{display:flex;align-items:center;gap:10px;background:#f8fdf8;border:1.5px solid #c8e6c9;border-radius:10px;padding:12px 14px;flex-wrap:wrap}
-.slot-label{font-size:0.85rem;font-weight:bold;color:#2d7a3a;min-width:58px}
-.slot-row select{padding:8px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:0.9rem;color:#333;background:white;cursor:pointer}
-.slot-row select:focus{outline:none;border-color:#2d7a3a}
-.slot-sep{color:#888;font-size:0.9rem}
-.persons-row{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap}
-.persons-label{font-size:0.9rem;font-weight:bold;color:#555}
-.persons-row select{padding:8px 12px;border:2px solid #ddd;border-radius:8px;font-size:0.95rem;color:#333;background:white;cursor:pointer}
-.persons-row select:focus{outline:none;border-color:#2d7a3a}
+.week-grid-wrap{margin-bottom:16px;overflow-x:auto;-webkit-overflow-scrolling:touch}
+.week-grid{width:100%;border-collapse:collapse}
+.week-grid th{background:#f0f9f1;color:#2d7a3a;font-size:0.82rem;font-weight:bold;padding:10px 6px;text-align:center;border-bottom:2px solid #c8e6c9}
+.week-grid td{padding:8px 5px;text-align:center;border-bottom:1px solid #f0f4f0;vertical-align:middle}
+.week-grid tbody tr:last-child td{border-bottom:none}
+.week-grid tbody tr:hover td{background:#f8fdf8}
+.day-name-cell{font-weight:bold;font-size:0.95rem;color:#2d7a3a;padding-left:4px!important;text-align:left!important;white-space:nowrap}
+.meal-check input[type=checkbox]{width:22px;height:22px;cursor:pointer;accent-color:#2d7a3a}
+.day-persons{padding:5px 3px;border:1.5px solid #ddd;border-radius:7px;font-size:0.82rem;color:#333;background:white;cursor:pointer;width:100%;min-width:54px}
+.day-persons:focus{outline:none;border-color:#2d7a3a}
 .btn-generate{background:#2d7a3a;color:white;border:none;padding:13px 32px;border-radius:8px;font-size:1rem;font-weight:bold;cursor:pointer;transition:background 0.2s,transform 0.1s;width:100%}
 .btn-generate:hover{background:#236030}
 .btn-generate:active{transform:scale(0.97)}
 .section{background:white;border-radius:14px;padding:24px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.07);display:none}
 .section.visible{display:block}
 .section-title{font-size:1.1rem;font-weight:bold;color:#2d7a3a;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #e8f5e9}
-.slot-group{margin-bottom:28px}
-.slot-group:last-child{margin-bottom:0}
-.slot-group-title{font-size:0.82rem;font-weight:bold;color:#888;margin-bottom:12px;padding:4px 10px;background:#f0f4f0;border-radius:6px;display:inline-block}
-.day-block{margin-bottom:16px}
-.day-block-title{font-size:0.78rem;color:#aaa;margin-bottom:6px;font-weight:bold}
-.day-meals{display:flex;gap:8px;flex-wrap:wrap}
+.day-card{margin-bottom:24px}
+.day-card:last-child{margin-bottom:0}
+.day-card-title{font-size:1rem;font-weight:bold;color:#2d7a3a;padding:6px 10px;background:#f0f9f1;border-radius:8px;margin-bottom:10px;border-left:4px solid #4caf50}
+.day-card-meals{display:flex;gap:8px;flex-wrap:wrap}
 .meal-card{background:#f8fdf8;border:2px solid #c8e6c9;border-radius:10px;padding:12px;min-width:140px;max-width:190px;flex:1;cursor:pointer;transition:box-shadow 0.2s,transform 0.1s}
 .meal-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.12);transform:translateY(-1px)}
 .meal-card .type-label{font-size:0.68rem;color:#aaa;margin-bottom:2px}
@@ -99,7 +97,7 @@ header p{font-size:0.9rem;opacity:0.85}
   header h1{font-size:1.4rem}
   .total-amount{font-size:2.2rem}
   .sale-grid{grid-template-columns:repeat(2,1fr)}
-  .day-meals{flex-direction:column}
+  .day-card-meals{flex-direction:column}
   .meal-card{max-width:100%}
 }
 </style>
@@ -130,29 +128,69 @@ header p{font-size:0.9rem;opacity:0.85}
 
   <div class="controls">
     <h2>⚙️ 献立の設定</h2>
-    <div class="slots-area">
-      <div class="slot-row">
-        <span class="slot-label">スロット1</span>
-        <select id="s1d"><option value="0">なし</option><option value="1">1日</option><option value="2">2日</option><option value="3">3日</option><option value="4">4日</option><option value="5" selected>5日</option><option value="6">6日</option><option value="7">7日</option></select>
-        <span class="slot-sep">×</span>
-        <select id="s1t"><option value="dinner" selected>夕食のみ</option><option value="lunch">昼食のみ</option><option value="breakfast">朝食のみ</option><option value="lunch_dinner">昼・夕食</option><option value="all">朝・昼・夕食</option></select>
-      </div>
-      <div class="slot-row">
-        <span class="slot-label">スロット2</span>
-        <select id="s2d"><option value="0">なし</option><option value="1">1日</option><option value="2" selected>2日</option><option value="3">3日</option><option value="4">4日</option><option value="5">5日</option><option value="6">6日</option><option value="7">7日</option></select>
-        <span class="slot-sep">×</span>
-        <select id="s2t"><option value="dinner">夕食のみ</option><option value="lunch">昼食のみ</option><option value="breakfast">朝食のみ</option><option value="lunch_dinner">昼・夕食</option><option value="all" selected>朝・昼・夕食</option></select>
-      </div>
-      <div class="slot-row">
-        <span class="slot-label">スロット3</span>
-        <select id="s3d"><option value="0" selected>なし</option><option value="1">1日</option><option value="2">2日</option><option value="3">3日</option><option value="4">4日</option><option value="5">5日</option><option value="6">6日</option><option value="7">7日</option></select>
-        <span class="slot-sep">×</span>
-        <select id="s3t"><option value="dinner" selected>夕食のみ</option><option value="lunch">昼食のみ</option><option value="breakfast">朝食のみ</option><option value="lunch_dinner">昼・夕食</option><option value="all">朝・昼・夕食</option></select>
-      </div>
-    </div>
-    <div class="persons-row">
-      <span class="persons-label">👥 人数</span>
-      <select id="persons"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select>
+    <div class="week-grid-wrap">
+      <table class="week-grid">
+        <thead>
+          <tr>
+            <th></th>
+            <th>朝食</th>
+            <th>昼食</th>
+            <th>夕食</th>
+            <th>人数</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="day-name-cell">月</td>
+            <td class="meal-check"><input type="checkbox" id="d0b"></td>
+            <td class="meal-check"><input type="checkbox" id="d0l"></td>
+            <td class="meal-check"><input type="checkbox" id="d0d" checked></td>
+            <td><select class="day-persons" id="d0p"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select></td>
+          </tr>
+          <tr>
+            <td class="day-name-cell">火</td>
+            <td class="meal-check"><input type="checkbox" id="d1b"></td>
+            <td class="meal-check"><input type="checkbox" id="d1l"></td>
+            <td class="meal-check"><input type="checkbox" id="d1d" checked></td>
+            <td><select class="day-persons" id="d1p"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select></td>
+          </tr>
+          <tr>
+            <td class="day-name-cell">水</td>
+            <td class="meal-check"><input type="checkbox" id="d2b"></td>
+            <td class="meal-check"><input type="checkbox" id="d2l"></td>
+            <td class="meal-check"><input type="checkbox" id="d2d" checked></td>
+            <td><select class="day-persons" id="d2p"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select></td>
+          </tr>
+          <tr>
+            <td class="day-name-cell">木</td>
+            <td class="meal-check"><input type="checkbox" id="d3b"></td>
+            <td class="meal-check"><input type="checkbox" id="d3l"></td>
+            <td class="meal-check"><input type="checkbox" id="d3d" checked></td>
+            <td><select class="day-persons" id="d3p"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select></td>
+          </tr>
+          <tr>
+            <td class="day-name-cell">金</td>
+            <td class="meal-check"><input type="checkbox" id="d4b"></td>
+            <td class="meal-check"><input type="checkbox" id="d4l"></td>
+            <td class="meal-check"><input type="checkbox" id="d4d" checked></td>
+            <td><select class="day-persons" id="d4p"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select></td>
+          </tr>
+          <tr>
+            <td class="day-name-cell">土</td>
+            <td class="meal-check"><input type="checkbox" id="d5b" checked></td>
+            <td class="meal-check"><input type="checkbox" id="d5l" checked></td>
+            <td class="meal-check"><input type="checkbox" id="d5d" checked></td>
+            <td><select class="day-persons" id="d5p"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select></td>
+          </tr>
+          <tr>
+            <td class="day-name-cell">日</td>
+            <td class="meal-check"><input type="checkbox" id="d6b" checked></td>
+            <td class="meal-check"><input type="checkbox" id="d6l" checked></td>
+            <td class="meal-check"><input type="checkbox" id="d6d" checked></td>
+            <td><select class="day-persons" id="d6p"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select></td>
+          </tr>
+        </tbody>
+      </table>
     </div>
     <button class="btn-generate" onclick="generate()">🍽️ 献立を考える</button>
   </div>
@@ -163,7 +201,7 @@ header p{font-size:0.9rem;opacity:0.85}
   </div>
 
   <div class="section" id="shoppingSection">
-    <div class="section-title">🛒 買い物リスト（全スロット合計）</div>
+    <div class="section-title">🛒 1週間分 買い物リスト</div>
     <div id="shoppingList"></div>
   </div>
 
@@ -540,14 +578,6 @@ function pickRandom(arr, n) {
   return result.slice(0, n);
 }
 
-function getSlotMealTypes(type) {
-  if (type === 'dinner')       return [{label:'夕食', pool:dinners,        isDinner:true  }];
-  if (type === 'lunch')        return [{label:'昼食', pool:lunchMeals,     isDinner:false }];
-  if (type === 'breakfast')    return [{label:'朝食', pool:breakfastMeals, isDinner:false }];
-  if (type === 'lunch_dinner') return [{label:'昼食', pool:lunchMeals, isDinner:false}, {label:'夕食', pool:dinners, isDinner:true}];
-  if (type === 'all')          return [{label:'朝食', pool:breakfastMeals, isDinner:false}, {label:'昼食', pool:lunchMeals, isDinner:false}, {label:'夕食', pool:dinners, isDinner:true}];
-  return [];
-}
 
 function openModal(meal, sides) {
   document.getElementById('mIcon').textContent = meal.icon;
@@ -579,85 +609,80 @@ function closeModalOverlay(e) {
 }
 
 function generate() {
-  const persons = parseInt(document.getElementById('persons').value);
-  const pf = persons / 2;
-  const slotConfigs = [
-    {days:parseInt(document.getElementById('s1d').value), type:document.getElementById('s1t').value, label:'スロット1'},
-    {days:parseInt(document.getElementById('s2d').value), type:document.getElementById('s2t').value, label:'スロット2'},
-    {days:parseInt(document.getElementById('s3d').value), type:document.getElementById('s3t').value, label:'スロット3'},
-  ].filter(s => s.days > 0);
-
-  if (slotConfigs.length === 0) { alert('日数を1日以上に設定してください'); return; }
+  const dayNames = ['月','火','水','木','金','土','日'];
+  const activeDays = [];
+  for (let i = 0; i < 7; i++) {
+    const hasB = document.getElementById('d'+i+'b').checked;
+    const hasL = document.getElementById('d'+i+'l').checked;
+    const hasD = document.getElementById('d'+i+'d').checked;
+    const persons = parseInt(document.getElementById('d'+i+'p').value);
+    if (hasB || hasL || hasD) activeDays.push({label:dayNames[i], hasB, hasL, hasD, persons});
+  }
+  if (activeDays.length === 0) { alert('食事を1つ以上チェックしてください'); return; }
 
   const content = document.getElementById('mealContent');
   content.innerHTML = '';
   const consumption = {};
+  let officialUsed = false;
 
-  const typeLabel = {dinner:'夕食のみ',lunch:'昼食のみ',breakfast:'朝食のみ',lunch_dinner:'昼・夕食',all:'朝・昼・夕食'};
+  for (const day of activeDays) {
+    const pf = day.persons / 2;
+    const dayCard = document.createElement('div');
+    dayCard.className = 'day-card';
+    dayCard.innerHTML = '<div class="day-card-title">' + day.label + '曜日</div>';
+    const mealsRow = document.createElement('div');
+    mealsRow.className = 'day-card-meals';
 
-  for (const slot of slotConfigs) {
-    const mealTypes = getSlotMealTypes(slot.type);
-    const group = document.createElement('div');
-    group.className = 'slot-group';
-    group.innerHTML = '<div class="slot-group-title">' + slot.days + '日 × ' + (typeLabel[slot.type] || '') + '</div>';
+    const slots = [];
+    if (day.hasB) slots.push({label:'朝食', pool:breakfastMeals, isDinner:false});
+    if (day.hasL) slots.push({label:'昼食', pool:lunchMeals,     isDinner:false});
+    if (day.hasD) slots.push({label:'夕食', pool:dinners,        isDinner:true });
 
-    const picks = {};
-    for (const mt of mealTypes) picks[mt.label] = pickRandom(mt.pool, slot.days);
-
-    // 夕食スロットがあれば1日分を公式レシピに差し替え
-    const dinnerSlot = mealTypes.find(mt => mt.isDinner);
-    if (dinnerSlot && fetchedRecipes.length > 0 && slot.days >= 1) {
-      const official = fetchedRecipes[Math.floor(Math.random() * fetchedRecipes.length)];
-      picks[dinnerSlot.label][0] = official;
-    }
-
-    for (let d = 0; d < slot.days; d++) {
-      const dayBlock = document.createElement('div');
-      dayBlock.className = 'day-block';
-      dayBlock.innerHTML = '<div class="day-block-title">' + (d + 1) + '日目</div>';
-      const dayMeals = document.createElement('div');
-      dayMeals.className = 'day-meals';
-
-      for (const mt of mealTypes) {
-        const meal = picks[mt.label][d];
-        let sides = [];
-        if (mt.isDinner) {
-          sides = [...sideDishes].sort(() => Math.random() - 0.5).slice(0, 2);
-        }
-        for (const [id, fr] of Object.entries(meal.ingredients)) {
+    for (const slot of slots) {
+      let meal;
+      if (slot.isDinner && !officialUsed && fetchedRecipes.length > 0) {
+        meal = fetchedRecipes[Math.floor(Math.random() * fetchedRecipes.length)];
+        officialUsed = true;
+      } else {
+        meal = pickRandom(slot.pool, 1)[0];
+      }
+      let sides = [];
+      if (slot.isDinner) {
+        sides = [...sideDishes].sort(() => Math.random() - 0.5).slice(0, 2);
+      }
+      for (const [id, fr] of Object.entries(meal.ingredients)) {
+        consumption[id] = (consumption[id] || 0) + fr * pf;
+      }
+      for (const sd of sides) {
+        for (const [id, fr] of Object.entries(sd.ingredients)) {
           consumption[id] = (consumption[id] || 0) + fr * pf;
         }
-        for (const sd of sides) {
-          for (const [id, fr] of Object.entries(sd.ingredients)) {
-            consumption[id] = (consumption[id] || 0) + fr * pf;
-          }
-        }
-        const card = document.createElement('div');
-        card.className = 'meal-card' + (meal.isOfficial ? ' official' : '');
-        const officialBadge = meal.isOfficial ? '<span class="official-badge">業スー公式</span>' : '';
-        const recipeLink = meal.isOfficial && meal.url
-          ? '<a class="recipe-link" href="' + meal.url + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">公式レシピを見る ↗</a>'
-          : '<div class="recipe-hint">タップでレシピを見る</div>';
-        card.innerHTML =
-          '<div class="type-label">' + mt.label + '</div>' +
-          '<div class="meal-icon">' + meal.icon + '</div>' +
-          '<div class="meal-name">' + meal.name + officialBadge + '</div>' +
-          '<div class="meal-desc">' + meal.desc + '</div>' +
-          (sides.length > 0 ? '<div class="side-info">副菜: ' + sides.map(s => s.name).join('・') + '</div>' : '') +
-          recipeLink;
-        card.onclick = () => openModal(meal, sides);
-        dayMeals.appendChild(card);
       }
-      dayBlock.appendChild(dayMeals);
-      group.appendChild(dayBlock);
+      const card = document.createElement('div');
+      card.className = 'meal-card' + (meal.isOfficial ? ' official' : '');
+      const officialBadge = meal.isOfficial ? '<span class="official-badge">業スー公式</span>' : '';
+      const recipeLink = meal.isOfficial && meal.url
+        ? '<a class="recipe-link" href="' + meal.url + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">公式レシピを見る ↗</a>'
+        : '<div class="recipe-hint">タップでレシピを見る</div>';
+      card.innerHTML =
+        '<div class="type-label">' + slot.label + '</div>' +
+        '<div class="meal-icon">' + meal.icon + '</div>' +
+        '<div class="meal-name">' + meal.name + officialBadge + '</div>' +
+        '<div class="meal-desc">' + meal.desc + '</div>' +
+        (sides.length > 0 ? '<div class="side-info">副菜: ' + sides.map(s => s.name).join('・') + '</div>' : '') +
+        recipeLink;
+      card.onclick = () => openModal(meal, sides);
+      mealsRow.appendChild(card);
     }
-    content.appendChild(group);
+    dayCard.appendChild(mealsRow);
+    content.appendChild(dayCard);
   }
 
   const listEl = document.getElementById('shoppingList');
   listEl.innerHTML = '';
   let total = 0;
-  const totalDays = slotConfigs.reduce((s, c) => s + c.days, 0);
+  const totalDays = activeDays.length;
+  const avgPersons = activeDays.reduce((s, d) => s + d.persons, 0) / totalDays;
 
   Object.entries(consumption)
     .filter(([id]) => products[id])
@@ -666,7 +691,7 @@ function generate() {
       const prod = products[id];
       const packs = Math.ceil(consumed);
       const unitPrice = salePrices[id] ?? prod.price;
-      const isOnSale  = salePrices[id] !== undefined;
+      const isOnSale = salePrices[id] !== undefined;
       const cost = packs * unitPrice;
       total += cost;
       const priceHtml = isOnSale
@@ -683,7 +708,7 @@ function generate() {
 
   document.getElementById('totalAmount').textContent = '¥' + total.toLocaleString();
   document.getElementById('totalBreakdown').textContent =
-    '1日あたり約 ¥' + Math.round(total / totalDays).toLocaleString() + ' ／ 1人あたり約 ¥' + Math.round(total / persons).toLocaleString();
+    totalDays + '日分 ／ 1日あたり約 ¥' + Math.round(total / totalDays).toLocaleString() + ' ／ 1人あたり約 ¥' + Math.round(total / avgPersons).toLocaleString();
 
   document.getElementById('mealSection').classList.add('visible');
   document.getElementById('shoppingSection').classList.add('visible');
