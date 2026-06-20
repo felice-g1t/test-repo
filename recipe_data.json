@@ -1,6 +1,197 @@
 {
-  "updated": "",
-  "success": false,
-  "count": 0,
-  "recipes": []
+  "updated": "2026-06-20",
+  "success": true,
+  "count": 38,
+  "recipes": [
+    {
+      "name": "いちごようかん",
+      "url": "https://www.gyomusuper.jp/recipe/",
+      "category": "ミラクルレシピ"
+    },
+    {
+      "name": "いちごアイス",
+      "url": "https://www.gyomusuper.jp/recipe/",
+      "category": "ミラクルレシピ"
+    },
+    {
+      "name": "メキシカンまぜそば",
+      "url": "https://www.gyomusuper.jp/recipe/",
+      "category": "ミラクルレシピ"
+    },
+    {
+      "name": "ピリ辛メキシカンドッグ",
+      "url": "https://www.gyomusuper.jp/recipe/",
+      "category": "ミラクルレシピ"
+    },
+    {
+      "name": "合鴨となすのアーモンドみそ焼き",
+      "url": "https://www.gyomusuper.jp/recipe/",
+      "category": "ミラクルレシピ"
+    },
+    {
+      "name": "コクうま★麻婆豆腐",
+      "url": "https://www.gyomusuper.jp/recipe/",
+      "category": "ミラクルレシピ"
+    },
+    {
+      "name": "中華風 高菜と枝豆のあえもの",
+      "url": "https://www.gyomusuper.jp/recipe/",
+      "category": "ミラクルレシピ"
+    },
+    {
+      "name": "ガイ パット ガパオ ラート カーオ（鶏ひき肉のバジル炒めかけごはん）",
+      "url": "https://www.gyomusuper.jp/recipe/",
+      "category": "ミラクルレシピ"
+    },
+    {
+      "name": "塩レモン唐揚げ",
+      "url": "https://www.gyomusuper.jp/recipe/",
+      "category": "ミラクルレシピ"
+    },
+    {
+      "name": "揚げなすのラタトゥイユ",
+      "url": "https://www.gyomusuper.jp/recipe/",
+      "category": "ミラクルレシピ"
+    },
+    {
+      "name": "コーヒームース",
+      "url": "https://www.gyomusuper.jp/recipe/",
+      "category": "ミラクルレシピ"
+    },
+    {
+      "name": "りんご酢でさっぱりアジアンサラダ",
+      "url": "https://www.gyomusuper.jp/recipe/",
+      "category": "ミラクルレシピ"
+    },
+    {
+      "name": "マンゴープリン",
+      "url": "https://www.gyomusuper.jp/recipe/",
+      "category": "ミラクルレシピ"
+    },
+    {
+      "name": "南国風担担麺",
+      "url": "https://www.gyomusuper.jp/recipe/",
+      "category": "ミラクルレシピ"
+    },
+    {
+      "name": "本格中華風塩焼そば",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "ライスペーパーをアレンジした料理",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "週末ピクニック【ゆるピク】",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "バーベキュー&キャンプ",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "おうちで作れるカクテル",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "サジー生活",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "世界の鍋料理（アジア編）",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "おうちでお手軽中華パーティー",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "ノンフライ乾麺で7DAYSラーメン",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "7Daysサジー！毎日レシピ",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "パスタ特集",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "おうちBakery",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "居酒屋 業スー",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "おうちポチャ",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "韓国のスパイシー鍋〈チゲ〉",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "インドネシア風スパイスカレー特集",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "マッサマンカレーペースト",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "アジアの薄焼きパン特集",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "おうちバル特集",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "タイカレー特集",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "電子レンジで楽チン！豚生姜焼きの素＆鶏照り焼きの素",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "ヨーロッパの伝統お菓子 スパイスケーキ",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "ハッピーバレンタイン",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    },
+    {
+      "name": "クリスマス 贅沢おすすめスイーツ",
+      "url": "https://www.gyomusuper.jp/topics/index.php",
+      "category": "特集・新商品"
+    }
+  ]
 }
