@@ -61,6 +61,7 @@ header p{font-size:0.9rem;opacity:0.85}
 .item-left{display:flex;flex-direction:column}
 .item-name{font-weight:bold;font-size:0.95rem;color:#333}
 .item-detail{font-size:0.8rem;color:#999;margin-top:2px}
+.item-usage{font-size:0.75rem;color:#2d7a3a;margin-top:2px}
 .item-right{display:flex;flex-direction:column;align-items:flex-end}
 .item-qty{font-size:0.8rem;color:#aaa}
 .item-price{font-weight:bold;color:#2d7a3a;font-size:1rem}
@@ -847,6 +848,54 @@ function changeMeal(dayIdx, mealIdx, event) {
   rebuildShopping();
 }
 
+function parseProductAmount(str) {
+  const s = str.replace(/\s/g, '');
+  let m;
+  // "Xg×Y缶" / "Xkg×Y" 等（乗数あり）
+  m = s.match(/^(\d+\.?\d*)(kg|g|ml|L)[×x](\d+)/i);
+  if (m) {
+    const v = parseFloat(m[1]), n = parseInt(m[3]), u = m[2].toLowerCase();
+    if (u === 'kg') return {value: v * n * 1000, unit: 'g'};
+    if (u === 'l')  return {value: v * n * 1000, unit: 'ml'};
+    return {value: v * n, unit: u};
+  }
+  // "Xkg" / "Xg" / "Xml" / "XL"
+  m = s.match(/^(\d+\.?\d*)(kg|g|ml|L)/i);
+  if (m) {
+    const v = parseFloat(m[1]), u = m[2].toLowerCase();
+    if (u === 'kg') return {value: v * 1000, unit: 'g'};
+    if (u === 'l')  return {value: v * 1000, unit: 'ml'};
+    return {value: v, unit: u};
+  }
+  // "Xパック×Y" / "X個×Y" 等
+  m = s.match(/^(\d+)(パック|個|枚|食|本|袋|缶)[×x](\d+)/i);
+  if (m) return {value: parseInt(m[1]) * parseInt(m[3]), unit: m[2]};
+  // 括弧内: "1ネット(3個入)" → 3個 / "1パック(20枚)" → 20枚
+  m = s.match(/\((\d+)(個|枚|食|本)/);
+  if (m) return {value: parseInt(m[1]), unit: m[2]};
+  // "X個" / "X本" / "X食" 等
+  m = s.match(/^(\d+)(個|本|食|枚|パック|袋|斤|缶)/);
+  if (m) return {value: parseInt(m[1]), unit: m[2]};
+  // 数字だけ
+  m = s.match(/(\d+\.?\d*)/);
+  return m ? {value: parseFloat(m[1]), unit: ''} : {value: 1, unit: ''};
+}
+
+function formatUsage(consumed, amountStr) {
+  const {value, unit} = parseProductAmount(amountStr);
+  const used = consumed * value;
+  if (unit === 'g') {
+    if (used >= 1000) { const k = used / 1000; return (k % 1 === 0 ? k : k.toFixed(1)) + 'kg'; }
+    return Math.round(used) + 'g';
+  }
+  if (unit === 'ml') {
+    if (used >= 1000) { const l = used / 1000; return (l % 1 === 0 ? l : l.toFixed(1)) + 'L'; }
+    return Math.round(used) + 'ml';
+  }
+  const r = Math.round(used * 10) / 10;
+  return (r % 1 === 0 ? r : r.toFixed(1)) + unit;
+}
+
 function rebuildShopping() {
   const consumption = {};
   for (const day of currentPlan) {
@@ -881,8 +930,9 @@ function rebuildShopping() {
       const item = document.createElement('div');
       item.className = 'shopping-item';
       item.dataset.cost = cost;
+      const usageText = formatUsage(consumed, prod.amount);
       item.innerHTML =
-        '<div class="item-left"><div class="item-name">' + prod.name + saleBadge + '</div><div class="item-detail">' + prod.amount + '</div></div>' +
+        '<div class="item-left"><div class="item-name">' + prod.name + saleBadge + '</div><div class="item-detail">' + prod.amount + '</div><div class="item-usage">使用量: 約' + usageText + '</div></div>' +
         '<div class="item-right"><div class="item-qty">' + packs + '個</div><div class="item-price">' + priceHtml + ' × ' + packs + '</div></div>' +
         '<button class="item-delete" onclick="removeShoppingItem(this)" title="今回は不要">✕</button>';
       listEl.appendChild(item);
