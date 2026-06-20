@@ -50,9 +50,11 @@ header p{font-size:0.9rem;opacity:0.85}
 .official-badge{background:#7b1fa2;color:white;font-size:0.66rem;font-weight:bold;padding:2px 6px;border-radius:4px;margin-left:5px;vertical-align:middle}
 .recipe-link{display:inline-block;margin-top:6px;font-size:0.72rem;color:#7b1fa2;text-decoration:none;border-bottom:1px dashed #ce93d8}
 .recipe-link:hover{color:#4a148c}
-.shopping-item{display:flex;justify-content:space-between;align-items:center;padding:12px 8px;border-bottom:1px solid #f0f0f0;transition:background 0.15s}
+.shopping-item{display:flex;justify-content:space-between;align-items:center;padding:12px 8px;border-bottom:1px solid #f0f0f0;transition:background 0.15s;gap:6px}
 .shopping-item:last-child{border-bottom:none}
 .shopping-item:hover{background:#f8fdf8;border-radius:6px}
+.item-delete{background:none;border:none;color:#ccc;font-size:1rem;cursor:pointer;padding:4px 7px;border-radius:6px;flex-shrink:0;line-height:1;transition:color 0.15s,background 0.15s}
+.item-delete:hover{color:#e53935;background:#fee}
 .item-left{display:flex;flex-direction:column}
 .item-name{font-weight:bold;font-size:0.95rem;color:#333}
 .item-detail{font-size:0.8rem;color:#999;margin-top:2px}
@@ -773,6 +775,18 @@ function openModal(meal, sides) {
   document.getElementById('recipeModal').classList.add('open');
 }
 
+function removeShoppingItem(btn) {
+  const item = btn.closest('.shopping-item');
+  const cost = parseFloat(item.dataset.cost) || 0;
+  item.remove();
+  // 合計金額を再計算
+  let total = 0;
+  document.querySelectorAll('#shoppingList .shopping-item').forEach(el => {
+    total += parseFloat(el.dataset.cost) || 0;
+  });
+  document.getElementById('totalAmount').textContent = '¥' + total.toLocaleString();
+}
+
 function closeModal() {
   document.getElementById('recipeModal').classList.remove('open');
 }
@@ -884,9 +898,11 @@ function generate() {
       const badge = isOnSale ? '<span class="sale-badge">SALE</span>' : '';
       const item = document.createElement('div');
       item.className = 'shopping-item';
+      item.dataset.cost = cost;
       item.innerHTML =
         '<div class="item-left"><div class="item-name">' + prod.name + badge + '</div><div class="item-detail">' + prod.amount + '</div></div>' +
-        '<div class="item-right"><div class="item-qty">' + packs + '個</div><div class="item-price">' + priceHtml + ' × ' + packs + '</div></div>';
+        '<div class="item-right"><div class="item-qty">' + packs + '個</div><div class="item-price">' + priceHtml + ' × ' + packs + '</div></div>' +
+        '<button class="item-delete" onclick="removeShoppingItem(this)" title="今回は不要">✕</button>';
       listEl.appendChild(item);
     });
 
