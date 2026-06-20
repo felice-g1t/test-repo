@@ -127,9 +127,31 @@ def guess_ingredients(ingredients_text: str) -> dict:
     return ing
 
 
+def get_page_image(soup: BeautifulSoup, page_url: str) -> str:
+    """ページのメイン画像URLを返す"""
+    og = soup.find('meta', property='og:image')
+    if og and og.get('content'):
+        src = og['content']
+        return ('https:' + src) if src.startswith('//') else src
+    for img in soup.find_all('img'):
+        src = img.get('src') or img.get('data-src') or ''
+        if not src:
+            continue
+        if any(s in src.lower() for s in ('logo', 'icon', 'banner', 'btn', 'arrow', 'blank')):
+            continue
+        if src.startswith('//'):
+            return 'https:' + src
+        if src.startswith('/'):
+            domain = '/'.join(page_url.split('/')[:3])
+            return domain + src
+        if src.startswith('http'):
+            return src
+    return ''
+
+
 def fetch_individual_recipe_pages(session: requests.Session, client: anthropic.Anthropic,
                                    soup: BeautifulSoup, base_url: str, source: str) -> list:
-    """カテゴリページからリンクを辿って個別レシピページも取得する"""
+    """カテゴリページからリンクを辿って個別レシピページも取得する（画像も収集）"""
     results = []
     links = set()
     for a in soup.find_all('a', href=True):
@@ -146,6 +168,9 @@ def fetch_individual_recipe_pages(session: requests.Session, client: anthropic.A
         sub_soup = fetch_page(session, link)
         if sub_soup:
             recipes = extract_recipes_from_page(client, sub_soup, source + ' 詳細')
+            img_url = get_page_image(sub_soup, link)
+            for r in recipes:
+                r['image_url'] = img_url
             results.extend(recipes)
     return results
 
@@ -162,11 +187,14 @@ def main():
         if not soup:
             continue
 
+        # カテゴリページ自体の画像（フォールバック用）
+        page_img = get_page_image(soup, url)
+
         # カテゴリページのテキストから直接抽出
         recipes = extract_recipes_from_page(client, soup, source)
         print(f'  → テキスト抽出: {len(recipes)}件')
 
-        # 個別レシピページも辿る
+        # 個別レシピページも辿る（画像付き）
         sub_recipes = fetch_individual_recipe_pages(session, client, soup, url, source)
         print(f'  → 個別ページ追加: {len(sub_recipes)}件')
 
@@ -185,6 +213,7 @@ def main():
                 'ingredients': guess_ingredients(r.get('ingredients_text', '')),
                 'ingredients_text': r.get('ingredients_text', ''),
                 'recipe': r.get('recipe_steps', []),
+                'image_url': r.get('image_url', page_img),
             })
 
         time.sleep(2)

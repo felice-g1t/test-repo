@@ -135,6 +135,7 @@ header p{font-size:0.9rem;opacity:0.85}
   .day-card-meals{flex-direction:column}
   .meal-card{max-width:100%}
 }
+.meal-thumb{width:100%;height:80px;object-fit:cover;border-radius:7px;margin-bottom:7px;display:block}
 .img-popup-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.72);z-index:200;align-items:center;justify-content:center}
 .img-popup-overlay.open{display:flex}
 .img-popup{background:white;border-radius:16px;padding:22px 20px 18px;max-width:340px;width:90%;text-align:center;position:relative}
@@ -912,6 +913,7 @@ async function loadRecipeData() {
         ingredients: {},
         recipe: ['業務スーパー公式レシピページをご確認ください'],
         url: r.url,
+        image_url: r.image_url || '',
         isOfficial: true,
       }));
       const banner = document.getElementById('recipeBanner');
@@ -941,6 +943,7 @@ async function loadSiteRecipes() {
           ingredients: r.ingredients || {},
           recipe: r.recipe,
           theme: r.theme || '普通',
+          image_url: r.image_url || '',
         };
         // テーマ別に適切なカテゴリに追加（夕食・昼食どちらにも追加）
         dinners.push(meal);
@@ -1042,11 +1045,15 @@ function buildMealCardEl(dayIdx, mealIdx) {
   const recipeLink = meal.isOfficial && meal.url
     ? '<a class="recipe-link" href="' + meal.url + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">公式レシピを見る ↗</a>'
     : '<div class="recipe-hint">タップでレシピを見る</div>';
+  const thumbHtml = meal.image_url
+    ? '<img class="meal-thumb" src="' + meal.image_url + '" alt="' + meal.name + '" onerror="this.style.display=\'none\'">'
+    : '';
   card.innerHTML =
     '<div class="meal-card-header">' +
       '<div class="type-label">' + slot.label + '</div>' +
       '<button class="btn-change-meal" onclick="changeMeal(' + dayIdx + ',' + mealIdx + ',event)" title="別のメニューに変える">🔄</button>' +
     '</div>' +
+    thumbHtml +
     '<div class="meal-icon">' + meal.icon + '</div>' +
     '<div class="meal-name">' + meal.name + badge + '</div>' +
     '<div class="meal-desc">' + meal.desc + '</div>' +
