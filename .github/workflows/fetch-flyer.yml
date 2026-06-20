@@ -21,18 +21,25 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: 依存パッケージをインストール
-        run: pip install requests beautifulsoup4
+      - name: Tesseract OCR をインストール
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y tesseract-ocr tesseract-ocr-jpn
+
+      - name: Python パッケージをインストール
+        run: pip install requests beautifulsoup4 Pillow pytesseract
 
       - name: セール情報を取得
         run: python scripts/fetch_sale.py
 
-      - name: デバッグHTMLをアーティファクトとして保存
+      - name: デバッグファイルを保存
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: debug-html
-          path: debug_html.txt
+          name: debug-files
+          path: |
+            debug_ocr.txt
+            debug_html.txt
           if-no-files-found: ignore
 
       - name: 変更があればコミット & プッシュ
