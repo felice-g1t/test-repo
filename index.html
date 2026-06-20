@@ -234,6 +234,7 @@ const products = {
   mentsuyu:       {name:'めんつゆ',         amount:'500ml',                price:198 },
   mayo:           {name:'マヨネーズ',       amount:'500g',                  price:198 },
   sesame:         {name:'すりごま',         amount:'50g',                   price:98  },
+  shiso:          {name:'青じそ',           amount:'1パック(20枚)',          price:98  },
 };
 
 const sideDishes = [
@@ -267,6 +268,8 @@ const sideDishes = [
    recipe:['わかめを水で戻す','お湯にごま油・塩を溶かし、わかめとねぎを加える']},
   {id:'daits',   name:'大根の甘酢漬け',     icon:'🥒', ingredients:{daikon:0.15},
    recipe:['大根を薄切りにして塩もみ5分','水気を絞り砂糖・酢・塩で和えて10分置く']},
+  {id:'shisotofu',name:'青じそペースト冷奴',icon:'🌿', ingredients:{tofu:0.15,shiso:0.5,sesame:0.05},
+   recipe:['青じそをみじん切りにし、すりごま・オリーブ油・塩少々と混ぜてペーストを作る','豆腐をひと口大に切って盛り、ペーストをかける']},
 ];
 
 const dinners = [
@@ -402,6 +405,12 @@ const dinners = [
   {name:'ハムエッグ丼',icon:'🥚',desc:'ロースハム・卵',
    ingredients:{ham_bacon:0.30,egg:0.12,rice:0.07},
    recipe:['ハムをフライパンで焼く','目玉焼きを作りご飯に乗せてハムと一緒に盛る','醤油かポン酢をかける']},
+  {name:'青じそペーストパスタ',icon:'🌿',desc:'青じそ・パスタ（レタスクラブレシピ）',
+   ingredients:{shiso:1.5,pasta:0.50,sesame:0.15},
+   recipe:['青じそ50枚をみじん切りにして水にさらし、水気をよく絞る','すりごま大さじ2・レモン汁小さじ1/2・塩・にんにく少々・オリーブ油1/2カップをよく混ぜて青じそペーストを作る','パスタを茹でてペーストと和える（茹で汁少量で伸ばすとよい）']},
+  {name:'チキンの青じそペーストがけ',icon:'🌿',desc:'鶏むね肉・青じそペースト',
+   ingredients:{chicken:0.25,shiso:1.5,sesame:0.15,rice:0.07},
+   recipe:['青じそ50枚をみじん切りにして水にさらし水気を絞り、すりごま・レモン汁・塩・にんにく・オリーブ油と混ぜてペーストを作る','鶏むねを塩コショウして両面こんがり焼く','スライスしてペーストをたっぷりかける']},
 ];
 
 const lunchMeals = [
@@ -435,6 +444,9 @@ const lunchMeals = [
   {name:'納豆ご飯',icon:'🫘',desc:'納豆・ご飯',
    ingredients:{natto:0.33,rice:0.07,egg:0.06},
    recipe:['納豆をよく混ぜてタレで味付け','ご飯に乗せ卵かけや長ねぎを添えても']},
+  {name:'青じそペーストうどん',icon:'🌿',desc:'青じそ・冷凍うどん（レタスクラブアレンジ）',
+   ingredients:{shiso:1.5,udon:0.40,sesame:0.15},
+   recipe:['青じそ50枚をみじん切りにして水にさらし水気を絞る','すりごま・レモン汁・塩・にんにく・オリーブ油と混ぜてペーストを作る','うどんを冷水で締めてペーストを和える（冷やしうどん）']},
 ];
 
 const breakfastMeals = [
