@@ -229,6 +229,58 @@
             opacity: 0.65;
         }
 
+        /* セール情報バナー */
+        .sale-banner {
+            background: white;
+            border-radius: 14px;
+            padding: 16px 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9rem;
+        }
+
+        .sale-banner.ok   { border-left: 4px solid #e53935; }
+        .sale-banner.fail { border-left: 4px solid #bbb; }
+
+        .sale-dot {
+            width: 10px; height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+
+        .sale-dot.ok   { background: #e53935; }
+        .sale-dot.fail { background: #bbb; }
+
+        .sale-banner-text { color: #555; }
+        .sale-banner-date { color: #aaa; font-size: 0.8rem; margin-left: auto; }
+
+        /* セールバッジ */
+        .sale-badge {
+            background: #e53935;
+            color: white;
+            font-size: 0.7rem;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-left: 6px;
+            vertical-align: middle;
+        }
+
+        .price-normal-strike {
+            text-decoration: line-through;
+            color: #aaa;
+            font-size: 0.85rem;
+            margin-right: 4px;
+        }
+
+        .price-sale {
+            color: #e53935;
+            font-weight: bold;
+        }
+
         /* Responsive */
         @media (max-width: 500px) {
             header h1 { font-size: 1.4rem; }
@@ -245,6 +297,12 @@
 </header>
 
 <div class="container">
+
+    <div class="sale-banner fail" id="saleBanner">
+        <div class="sale-dot fail" id="saleDot"></div>
+        <div class="sale-banner-text" id="saleBannerText">セール情報を読み込み中...</div>
+        <div class="sale-banner-date" id="saleBannerDate"></div>
+    </div>
 
     <div class="controls">
         <h2>⚙️ 設定してボタンを押してください</h2>
@@ -424,6 +482,48 @@
         },
     ];
 
+    // セール価格マップ { productId: salePrice }
+    let salePrices = {};
+
+    // ページ読み込み時にセール情報を取得
+    async function loadSaleData() {
+        const banner   = document.getElementById('saleBanner');
+        const dot      = document.getElementById('saleDot');
+        const text     = document.getElementById('saleBannerText');
+        const dateEl   = document.getElementById('saleBannerDate');
+
+        try {
+            const res  = await fetch('./sale_data.json?_=' + Date.now());
+            const data = await res.json();
+
+            dateEl.textContent = data.updated ? `更新日: ${data.updated}` : '';
+
+            if (data.success && data.items && data.items.length > 0) {
+                data.items.forEach(item => {
+                    if (item.productId && item.salePrice) {
+                        salePrices[item.productId] = item.salePrice;
+                    }
+                });
+                const count = Object.keys(salePrices).length;
+                banner.className = 'sale-banner ok';
+                dot.className    = 'sale-dot ok';
+                text.textContent = `🏷️ 今週のセール情報を反映中（${count}品目）`;
+            } else {
+                banner.className = 'sale-banner fail';
+                dot.className    = 'sale-dot fail';
+                text.textContent = data.success
+                    ? 'セール対象の商品は現在なし（通常価格で計算）'
+                    : 'セール情報を取得できませんでした（通常価格で計算）';
+            }
+        } catch (e) {
+            banner.className = 'sale-banner fail';
+            dot.className    = 'sale-dot fail';
+            text.textContent = 'セール情報ファイルが見つかりません（通常価格で計算）';
+        }
+    }
+
+    loadSaleData();
+
     const dayNames = ['月', '火', '水', '木', '金', '土', '日'];
 
     function pickRandom(arr, n) {
@@ -496,21 +596,30 @@
         });
 
         for (const [id, consumed] of sortedItems) {
-            const prod = products[id];
-            const packs = Math.ceil(consumed);
-            const cost = packs * prod.price;
+            const prod      = products[id];
+            const packs     = Math.ceil(consumed);
+            const unitPrice = salePrices[id] ?? prod.price;
+            const isOnSale  = salePrices[id] !== undefined;
+            const cost      = packs * unitPrice;
             total += cost;
+
+            const priceHtml = isOnSale
+                ? `<span class="price-normal-strike">¥${prod.price.toLocaleString()}</span>
+                   <span class="price-sale">¥${unitPrice.toLocaleString()}</span>`
+                : `¥${unitPrice.toLocaleString()}`;
+
+            const badgeHtml = isOnSale ? '<span class="sale-badge">SALE</span>' : '';
 
             const item = document.createElement('div');
             item.className = 'shopping-item';
             item.innerHTML = `
                 <div class="item-left">
-                    <div class="item-name">${prod.name}</div>
+                    <div class="item-name">${prod.name}${badgeHtml}</div>
                     <div class="item-detail">${prod.amount}</div>
                 </div>
                 <div class="item-right">
                     <div class="item-qty">${packs}個</div>
-                    <div class="item-price">¥${cost.toLocaleString()}</div>
+                    <div class="item-price">${priceHtml} × ${packs}</div>
                 </div>
             `;
             listEl.appendChild(item);
