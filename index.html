@@ -1,711 +1,636 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>業務スーパー献立プランナー</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Hiragino Sans', 'Yu Gothic', 'Meiryo', sans-serif;
-            background: #f0f4f0;
-            color: #333;
-            min-height: 100vh;
-        }
-
-        header {
-            background: linear-gradient(135deg, #2d7a3a, #4caf50);
-            color: white;
-            padding: 28px 20px;
-            text-align: center;
-            box-shadow: 0 3px 10px rgba(0,0,0,0.2);
-        }
-
-        header h1 { font-size: 1.8rem; margin-bottom: 6px; }
-        header p { font-size: 0.9rem; opacity: 0.85; }
-
-        .container {
-            max-width: 960px;
-            margin: 0 auto;
-            padding: 24px 16px;
-        }
-
-        /* Controls */
-        .controls {
-            background: white;
-            border-radius: 14px;
-            padding: 24px;
-            margin-bottom: 24px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-        }
-
-        .controls h2 {
-            font-size: 1rem;
-            color: #2d7a3a;
-            margin-bottom: 16px;
-            font-weight: bold;
-        }
-
-        .control-row {
-            display: flex;
-            gap: 14px;
-            align-items: flex-end;
-            flex-wrap: wrap;
-        }
-
-        .control-group { flex: 1; min-width: 130px; }
-
-        .control-group label {
-            display: block;
-            margin-bottom: 6px;
-            font-size: 0.85rem;
-            font-weight: bold;
-            color: #555;
-        }
-
-        .control-group select {
-            width: 100%;
-            padding: 10px 12px;
-            border: 2px solid #ddd;
-            border-radius: 8px;
-            font-size: 0.95rem;
-            color: #333;
-            background: white;
-            cursor: pointer;
-            transition: border-color 0.2s;
-        }
-
-        .control-group select:focus {
-            outline: none;
-            border-color: #2d7a3a;
-        }
-
-        .btn-generate {
-            background: #2d7a3a;
-            color: white;
-            border: none;
-            padding: 12px 28px;
-            border-radius: 8px;
-            font-size: 1rem;
-            font-weight: bold;
-            cursor: pointer;
-            transition: background 0.2s, transform 0.1s;
-            white-space: nowrap;
-        }
-
-        .btn-generate:hover { background: #236030; }
-        .btn-generate:active { transform: scale(0.97); }
-
-        /* Section */
-        .section {
-            background: white;
-            border-radius: 14px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-            display: none;
-        }
-
-        .section.visible { display: block; }
-
-        .section-title {
-            font-size: 1.1rem;
-            font-weight: bold;
-            color: #2d7a3a;
-            margin-bottom: 16px;
-            padding-bottom: 10px;
-            border-bottom: 2px solid #e8f5e9;
-        }
-
-        /* Meal cards */
-        .meal-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
-            gap: 12px;
-        }
-
-        .meal-card {
-            background: #f8fdf8;
-            border: 2px solid #c8e6c9;
-            border-radius: 10px;
-            padding: 14px;
-            transition: box-shadow 0.2s;
-        }
-
-        .meal-card:hover { box-shadow: 0 3px 10px rgba(0,0,0,0.1); }
-
-        .meal-card .day-label {
-            font-size: 0.75rem;
-            color: #888;
-            margin-bottom: 4px;
-        }
-
-        .meal-card .meal-icon { font-size: 1.5rem; margin-bottom: 4px; }
-
-        .meal-card .meal-name {
-            font-weight: bold;
-            font-size: 0.95rem;
-            color: #2d7a3a;
-            margin-bottom: 6px;
-        }
-
-        .meal-card .meal-desc {
-            font-size: 0.75rem;
-            color: #777;
-            line-height: 1.5;
-        }
-
-        /* Shopping list */
-        .shopping-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 12px 8px;
-            border-bottom: 1px solid #f0f0f0;
-            transition: background 0.15s;
-        }
-
-        .shopping-item:last-child { border-bottom: none; }
-        .shopping-item:hover { background: #f8fdf8; border-radius: 6px; }
-
-        .item-left { display: flex; flex-direction: column; }
-
-        .item-name {
-            font-weight: bold;
-            font-size: 0.95rem;
-            color: #333;
-        }
-
-        .item-detail {
-            font-size: 0.8rem;
-            color: #999;
-            margin-top: 2px;
-        }
-
-        .item-right { display: flex; flex-direction: column; align-items: flex-end; }
-
-        .item-qty {
-            font-size: 0.8rem;
-            color: #aaa;
-        }
-
-        .item-price {
-            font-weight: bold;
-            color: #2d7a3a;
-            font-size: 1rem;
-        }
-
-        /* Total */
-        .total-section {
-            background: linear-gradient(135deg, #2d7a3a, #388e3c);
-            color: white;
-            border-radius: 14px;
-            padding: 28px;
-            text-align: center;
-            box-shadow: 0 4px 15px rgba(45,122,58,0.3);
-            display: none;
-        }
-
-        .total-section.visible { display: block; }
-
-        .total-label { font-size: 0.95rem; opacity: 0.85; margin-bottom: 8px; }
-
-        .total-amount {
-            font-size: 3rem;
-            font-weight: bold;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-        }
-
-        .total-breakdown {
-            font-size: 0.85rem;
-            opacity: 0.8;
-            margin-bottom: 6px;
-        }
-
-        .total-note {
-            font-size: 0.78rem;
-            opacity: 0.65;
-        }
-
-        /* セール情報バナー */
-        .sale-banner {
-            background: white;
-            border-radius: 14px;
-            padding: 16px 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            font-size: 0.9rem;
-        }
-
-        .sale-banner.ok   { border-left: 4px solid #e53935; }
-        .sale-banner.fail { border-left: 4px solid #bbb; }
-
-        .sale-dot {
-            width: 10px; height: 10px;
-            border-radius: 50%;
-            flex-shrink: 0;
-        }
-
-        .sale-dot.ok   { background: #e53935; }
-        .sale-dot.fail { background: #bbb; }
-
-        .sale-banner-text { color: #555; }
-        .sale-banner-date { color: #aaa; font-size: 0.8rem; margin-left: auto; }
-
-        /* セールバッジ */
-        .sale-badge {
-            background: #e53935;
-            color: white;
-            font-size: 0.7rem;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 4px;
-            margin-left: 6px;
-            vertical-align: middle;
-        }
-
-        .price-normal-strike {
-            text-decoration: line-through;
-            color: #aaa;
-            font-size: 0.85rem;
-            margin-right: 4px;
-        }
-
-        .price-sale {
-            color: #e53935;
-            font-weight: bold;
-        }
-
-        /* 今週のセール品一覧 */
-        .all-sale-section {
-            background: white;
-            border-radius: 14px;
-            padding: 24px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.07);
-            display: none;
-        }
-
-        .all-sale-section.visible { display: block; }
-
-        .sale-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-            gap: 8px;
-            margin-top: 4px;
-        }
-
-        .sale-item-card {
-            background: #fff8f8;
-            border: 1px solid #ffcdd2;
-            border-radius: 8px;
-            padding: 10px 12px;
-        }
-
-        .sale-item-name {
-            font-size: 0.85rem;
-            color: #333;
-            margin-bottom: 4px;
-            line-height: 1.4;
-        }
-
-        .sale-item-price {
-            font-size: 1rem;
-            font-weight: bold;
-            color: #e53935;
-        }
-
-        /* Responsive */
-        @media (max-width: 500px) {
-            header h1 { font-size: 1.4rem; }
-            .meal-grid { grid-template-columns: repeat(2, 1fr); }
-            .total-amount { font-size: 2.2rem; }
-            .sale-grid { grid-template-columns: repeat(2, 1fr); }
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>業務スーパー献立プランナー</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Hiragino Sans','Yu Gothic','Meiryo',sans-serif;background:#f0f4f0;color:#333;min-height:100vh}
+header{background:linear-gradient(135deg,#2d7a3a,#4caf50);color:white;padding:28px 20px;text-align:center;box-shadow:0 3px 10px rgba(0,0,0,0.2)}
+header h1{font-size:1.8rem;margin-bottom:6px}
+header p{font-size:0.9rem;opacity:0.85}
+.container{max-width:960px;margin:0 auto;padding:24px 16px}
+.controls{background:white;border-radius:14px;padding:24px;margin-bottom:24px;box-shadow:0 2px 10px rgba(0,0,0,0.07)}
+.controls h2{font-size:1rem;color:#2d7a3a;margin-bottom:16px;font-weight:bold}
+.slots-area{display:flex;flex-direction:column;gap:10px;margin-bottom:14px}
+.slot-row{display:flex;align-items:center;gap:10px;background:#f8fdf8;border:1.5px solid #c8e6c9;border-radius:10px;padding:12px 14px;flex-wrap:wrap}
+.slot-label{font-size:0.85rem;font-weight:bold;color:#2d7a3a;min-width:58px}
+.slot-row select{padding:8px 10px;border:1.5px solid #ddd;border-radius:7px;font-size:0.9rem;color:#333;background:white;cursor:pointer}
+.slot-row select:focus{outline:none;border-color:#2d7a3a}
+.slot-sep{color:#888;font-size:0.9rem}
+.persons-row{display:flex;align-items:center;gap:14px;margin-bottom:14px;flex-wrap:wrap}
+.persons-label{font-size:0.9rem;font-weight:bold;color:#555}
+.persons-row select{padding:8px 12px;border:2px solid #ddd;border-radius:8px;font-size:0.95rem;color:#333;background:white;cursor:pointer}
+.persons-row select:focus{outline:none;border-color:#2d7a3a}
+.btn-generate{background:#2d7a3a;color:white;border:none;padding:13px 32px;border-radius:8px;font-size:1rem;font-weight:bold;cursor:pointer;transition:background 0.2s,transform 0.1s;width:100%}
+.btn-generate:hover{background:#236030}
+.btn-generate:active{transform:scale(0.97)}
+.section{background:white;border-radius:14px;padding:24px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.07);display:none}
+.section.visible{display:block}
+.section-title{font-size:1.1rem;font-weight:bold;color:#2d7a3a;margin-bottom:16px;padding-bottom:10px;border-bottom:2px solid #e8f5e9}
+.slot-group{margin-bottom:28px}
+.slot-group:last-child{margin-bottom:0}
+.slot-group-title{font-size:0.82rem;font-weight:bold;color:#888;margin-bottom:12px;padding:4px 10px;background:#f0f4f0;border-radius:6px;display:inline-block}
+.day-block{margin-bottom:16px}
+.day-block-title{font-size:0.78rem;color:#aaa;margin-bottom:6px;font-weight:bold}
+.day-meals{display:flex;gap:8px;flex-wrap:wrap}
+.meal-card{background:#f8fdf8;border:2px solid #c8e6c9;border-radius:10px;padding:12px;min-width:140px;max-width:190px;flex:1;cursor:pointer;transition:box-shadow 0.2s,transform 0.1s}
+.meal-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.12);transform:translateY(-1px)}
+.meal-card .type-label{font-size:0.68rem;color:#aaa;margin-bottom:2px}
+.meal-card .meal-icon{font-size:1.4rem;margin-bottom:3px}
+.meal-card .meal-name{font-weight:bold;font-size:0.88rem;color:#2d7a3a;margin-bottom:4px}
+.meal-card .meal-desc{font-size:0.72rem;color:#888;line-height:1.45}
+.meal-card .side-info{font-size:0.7rem;color:#b08000;margin-top:4px}
+.meal-card .recipe-hint{font-size:0.65rem;color:#bbb;margin-top:5px}
+.shopping-item{display:flex;justify-content:space-between;align-items:center;padding:12px 8px;border-bottom:1px solid #f0f0f0;transition:background 0.15s}
+.shopping-item:last-child{border-bottom:none}
+.shopping-item:hover{background:#f8fdf8;border-radius:6px}
+.item-left{display:flex;flex-direction:column}
+.item-name{font-weight:bold;font-size:0.95rem;color:#333}
+.item-detail{font-size:0.8rem;color:#999;margin-top:2px}
+.item-right{display:flex;flex-direction:column;align-items:flex-end}
+.item-qty{font-size:0.8rem;color:#aaa}
+.item-price{font-weight:bold;color:#2d7a3a;font-size:1rem}
+.total-section{background:linear-gradient(135deg,#2d7a3a,#388e3c);color:white;border-radius:14px;padding:28px;text-align:center;box-shadow:0 4px 15px rgba(45,122,58,0.3);display:none}
+.total-section.visible{display:block}
+.total-label{font-size:0.95rem;opacity:0.85;margin-bottom:8px}
+.total-amount{font-size:3rem;font-weight:bold;letter-spacing:2px;margin-bottom:10px}
+.total-breakdown{font-size:0.85rem;opacity:0.8;margin-bottom:6px}
+.total-note{font-size:0.78rem;opacity:0.65}
+.sale-banner{background:white;border-radius:14px;padding:16px 20px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.07);display:flex;align-items:center;gap:12px;font-size:0.9rem}
+.sale-banner.ok{border-left:4px solid #e53935}
+.sale-banner.fail{border-left:4px solid #bbb}
+.sale-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.sale-dot.ok{background:#e53935}
+.sale-dot.fail{background:#bbb}
+.sale-banner-text{color:#555}
+.sale-banner-date{color:#aaa;font-size:0.8rem;margin-left:auto}
+.sale-badge{background:#e53935;color:white;font-size:0.7rem;font-weight:bold;padding:2px 6px;border-radius:4px;margin-left:6px;vertical-align:middle}
+.price-normal-strike{text-decoration:line-through;color:#aaa;font-size:0.85rem;margin-right:4px}
+.price-sale{color:#e53935;font-weight:bold}
+.all-sale-section{background:white;border-radius:14px;padding:24px;margin-bottom:20px;box-shadow:0 2px 10px rgba(0,0,0,0.07);display:none}
+.all-sale-section.visible{display:block}
+.sale-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:4px}
+.sale-item-card{background:#fff8f8;border:1px solid #ffcdd2;border-radius:8px;padding:10px 12px}
+.sale-item-name{font-size:0.85rem;color:#333;margin-bottom:4px;line-height:1.4}
+.sale-item-price{font-size:1rem;font-weight:bold;color:#e53935}
+.modal-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.5);z-index:100;align-items:center;justify-content:center}
+.modal-overlay.open{display:flex}
+.modal{background:white;border-radius:16px;padding:28px;max-width:480px;width:90%;max-height:82vh;overflow-y:auto;position:relative}
+.modal-close{position:absolute;top:14px;right:16px;font-size:1.4rem;cursor:pointer;color:#aaa;background:none;border:none;line-height:1}
+.modal-close:hover{color:#333}
+.modal-icon{font-size:2.4rem;margin-bottom:6px}
+.modal-title{font-size:1.25rem;font-weight:bold;color:#2d7a3a;margin-bottom:14px}
+.modal-sec{font-size:0.78rem;font-weight:bold;color:#888;margin-bottom:6px;margin-top:14px;letter-spacing:1px;text-transform:uppercase}
+.recipe-steps{list-style:none}
+.recipe-steps li{display:flex;gap:10px;margin-bottom:8px;font-size:0.9rem;line-height:1.5}
+.step-num{background:#2d7a3a;color:white;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-size:0.72rem;font-weight:bold;flex-shrink:0;margin-top:1px}
+.side-step-num{background:#f0a500;color:white;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:0.66rem;font-weight:bold;flex-shrink:0;margin-top:2px}
+.side-card{background:#fff8e1;border-radius:8px;padding:10px 12px;margin-bottom:8px}
+.side-card-name{font-weight:bold;margin-bottom:6px;font-size:0.9rem}
+.side-steps{list-style:none}
+.side-steps li{display:flex;gap:8px;margin-bottom:4px;font-size:0.84rem;line-height:1.45}
+@media(max-width:500px){
+  header h1{font-size:1.4rem}
+  .total-amount{font-size:2.2rem}
+  .sale-grid{grid-template-columns:repeat(2,1fr)}
+  .day-meals{flex-direction:column}
+  .meal-card{max-width:100%}
+}
+</style>
 </head>
 <body>
-
 <header>
-    <h1>🛒 業務スーパー献立プランナー</h1>
-    <p>業務スーパーの商品で節約献立を自動作成！</p>
+  <h1>🛒 業務スーパー献立プランナー</h1>
+  <p>業務スーパーの商品で節約献立を自動作成！</p>
 </header>
-
 <div class="container">
 
-    <div class="sale-banner fail" id="saleBanner">
-        <div class="sale-dot fail" id="saleDot"></div>
-        <div class="sale-banner-text" id="saleBannerText">セール情報を読み込み中...</div>
-        <div class="sale-banner-date" id="saleBannerDate"></div>
-    </div>
+  <div class="sale-banner fail" id="saleBanner">
+    <div class="sale-dot fail" id="saleDot"></div>
+    <div class="sale-banner-text" id="saleBannerText">セール情報を読み込み中...</div>
+    <div class="sale-banner-date" id="saleBannerDate"></div>
+  </div>
 
-    <div class="all-sale-section" id="allSaleSection">
-        <div class="section-title">🏷️ 今週の業務スーパーセール品</div>
-        <div class="sale-grid" id="allSaleGrid"></div>
-    </div>
+  <div class="all-sale-section" id="allSaleSection">
+    <div class="section-title">🏷️ 今週の業務スーパーセール品</div>
+    <div class="sale-grid" id="allSaleGrid"></div>
+  </div>
 
-    <div class="controls">
-        <h2>⚙️ 設定してボタンを押してください</h2>
-        <div class="control-row">
-            <div class="control-group">
-                <label>日数</label>
-                <select id="days">
-                    <option value="3">3日分</option>
-                    <option value="5" selected>5日分</option>
-                    <option value="7">7日分</option>
-                </select>
-            </div>
-            <div class="control-group">
-                <label>人数</label>
-                <select id="persons">
-                    <option value="1">1人</option>
-                    <option value="2" selected>2人</option>
-                    <option value="3">3人</option>
-                    <option value="4">4人</option>
-                </select>
-            </div>
-            <div class="control-group">
-                <label>食事の回数</label>
-                <select id="mealsPerDay">
-                    <option value="1" selected>夕食のみ</option>
-                    <option value="2">昼・夕食</option>
-                    <option value="3">朝・昼・夕食</option>
-                </select>
-            </div>
-            <button class="btn-generate" onclick="generate()">🍽️ 献立を考える</button>
-        </div>
+  <div class="controls">
+    <h2>⚙️ 献立の設定</h2>
+    <div class="slots-area">
+      <div class="slot-row">
+        <span class="slot-label">スロット1</span>
+        <select id="s1d"><option value="0">なし</option><option value="1">1日</option><option value="2">2日</option><option value="3">3日</option><option value="4">4日</option><option value="5" selected>5日</option><option value="6">6日</option><option value="7">7日</option></select>
+        <span class="slot-sep">×</span>
+        <select id="s1t"><option value="dinner" selected>夕食のみ</option><option value="lunch">昼食のみ</option><option value="breakfast">朝食のみ</option><option value="lunch_dinner">昼・夕食</option><option value="all">朝・昼・夕食</option></select>
+      </div>
+      <div class="slot-row">
+        <span class="slot-label">スロット2</span>
+        <select id="s2d"><option value="0">なし</option><option value="1">1日</option><option value="2" selected>2日</option><option value="3">3日</option><option value="4">4日</option><option value="5">5日</option><option value="6">6日</option><option value="7">7日</option></select>
+        <span class="slot-sep">×</span>
+        <select id="s2t"><option value="dinner">夕食のみ</option><option value="lunch">昼食のみ</option><option value="breakfast">朝食のみ</option><option value="lunch_dinner">昼・夕食</option><option value="all" selected>朝・昼・夕食</option></select>
+      </div>
+      <div class="slot-row">
+        <span class="slot-label">スロット3</span>
+        <select id="s3d"><option value="0" selected>なし</option><option value="1">1日</option><option value="2">2日</option><option value="3">3日</option><option value="4">4日</option><option value="5">5日</option><option value="6">6日</option><option value="7">7日</option></select>
+        <span class="slot-sep">×</span>
+        <select id="s3t"><option value="dinner" selected>夕食のみ</option><option value="lunch">昼食のみ</option><option value="breakfast">朝食のみ</option><option value="lunch_dinner">昼・夕食</option><option value="all">朝・昼・夕食</option></select>
+      </div>
     </div>
+    <div class="persons-row">
+      <span class="persons-label">👥 人数</span>
+      <select id="persons"><option value="1">1人</option><option value="2" selected>2人</option><option value="3">3人</option><option value="4">4人</option></select>
+    </div>
+    <button class="btn-generate" onclick="generate()">🍽️ 献立を考える</button>
+  </div>
 
-    <div class="section" id="mealSection">
-        <div class="section-title">📅 献立</div>
-        <div class="meal-grid" id="mealGrid"></div>
-    </div>
+  <div class="section" id="mealSection">
+    <div class="section-title">📅 献立（カードをタップでレシピ表示）</div>
+    <div id="mealContent"></div>
+  </div>
 
-    <div class="section" id="shoppingSection">
-        <div class="section-title">🛒 買い物リスト</div>
-        <div id="shoppingList"></div>
-    </div>
+  <div class="section" id="shoppingSection">
+    <div class="section-title">🛒 買い物リスト（全スロット合計）</div>
+    <div id="shoppingList"></div>
+  </div>
 
-    <div class="total-section" id="totalSection">
-        <div class="total-label">お買い物合計金額（目安）</div>
-        <div class="total-amount" id="totalAmount">¥0</div>
-        <div class="total-breakdown" id="totalBreakdown"></div>
-        <div class="total-note">※価格は業務スーパー参考価格です。実際の価格・在庫と異なる場合があります</div>
-    </div>
+  <div class="total-section" id="totalSection">
+    <div class="total-label">お買い物合計金額（目安）</div>
+    <div class="total-amount" id="totalAmount">¥0</div>
+    <div class="total-breakdown" id="totalBreakdown"></div>
+    <div class="total-note">※価格は業務スーパー参考価格です。実際の価格・在庫と異なる場合があります</div>
+  </div>
 
 </div>
 
+<div class="modal-overlay" id="recipeModal" onclick="closeModalOverlay(event)">
+  <div class="modal">
+    <button class="modal-close" onclick="closeModal()">✕</button>
+    <div class="modal-icon" id="mIcon"></div>
+    <div class="modal-title" id="mTitle"></div>
+    <div class="modal-sec">材料（2人前）</div>
+    <div id="mIngr"></div>
+    <div class="modal-sec">作り方</div>
+    <ol class="recipe-steps" id="mRecipe"></ol>
+    <div id="mSides"></div>
+  </div>
+</div>
+
 <script>
-    const products = {
-        chicken:     { name: '鶏むね肉',         amount: '2kg',         price: 880  },
-        pork:        { name: '豚バラ薄切り',      amount: '1kg',         price: 700  },
-        ground:      { name: '合いびき肉',        amount: '500g',        price: 350  },
-        tofu:        { name: '絹ごし豆腐',        amount: '1kg',         price: 158  },
-        egg:         { name: '卵',                amount: '20個',        price: 350  },
-        bean_sprouts:{ name: 'もやし',            amount: '1kg',         price: 148  },
-        cabbage:     { name: 'キャベツ',          amount: '1個',         price: 198  },
-        onion:       { name: '玉ねぎ',            amount: '1.5kg',       price: 298  },
-        carrot:      { name: 'にんじん',          amount: '1kg',         price: 198  },
-        potato:      { name: 'じゃがいも',        amount: '2kg',         price: 348  },
-        mushroom:    { name: 'ぶなしめじ',        amount: '150g',        price: 88   },
-        gyoza:       { name: '冷凍餃子',          amount: '1kg(約50個)', price: 598  },
-        karaage:     { name: '冷凍唐揚げ',        amount: '1kg',         price: 678  },
-        curry_roux:  { name: 'カレールー',        amount: '1kg',         price: 348  },
-        tomato_can:  { name: 'トマト缶',          amount: '400g×2缶',    price: 176  },
-        pasta:       { name: 'パスタ',            amount: '500g',        price: 108  },
-        rice:        { name: '米',                amount: '5kg',         price: 1480 },
-        frozen_veg:  { name: '冷凍ミックス野菜',  amount: '500g',        price: 198  },
-        natto:       { name: '納豆',              amount: '3パック×3',   price: 198  },
-        bread:       { name: '食パン',            amount: '1斤',         price: 128  },
-    };
+const products = {
+  chicken:        {name:'鶏むね肉',         amount:'2kg',          price:880 },
+  pork:           {name:'豚バラ薄切り',      amount:'1kg',          price:700 },
+  pork_kom:       {name:'豚こま切れ',        amount:'500g',         price:298 },
+  ground:         {name:'合いびき肉',        amount:'500g',         price:350 },
+  tofu:           {name:'絹ごし豆腐',        amount:'1kg',          price:158 },
+  egg:            {name:'卵',               amount:'20個',          price:350 },
+  bean_sprouts:   {name:'もやし',           amount:'1袋',           price:68  },
+  cabbage:        {name:'キャベツ',          amount:'1個',           price:198 },
+  onion:          {name:'玉ねぎ',           amount:'1ネット(3個入)', price:198 },
+  carrot:         {name:'にんじん',          amount:'1kg',           price:198 },
+  potato:         {name:'じゃがいも',        amount:'2kg',           price:348 },
+  mushroom:       {name:'ぶなしめじ',        amount:'1袋',           price:88  },
+  enoki:          {name:'えのき',           amount:'1袋',            price:68  },
+  daikon:         {name:'大根',             amount:'1本',            price:138 },
+  hakusai:        {name:'白菜',             amount:'1/4個',          price:148 },
+  spring_onion:   {name:'長ねぎ',           amount:'2本',            price:138 },
+  spinach:        {name:'冷凍ほうれん草',    amount:'500g',           price:198 },
+  frozen_broccoli:{name:'冷凍ブロッコリー',  amount:'500g',           price:198 },
+  frozen_veg:     {name:'冷凍ミックス野菜',  amount:'500g',           price:198 },
+  frozen_edamame: {name:'冷凍枝豆',         amount:'500g',           price:198 },
+  gyoza:          {name:'冷凍餃子',         amount:'1kg(約50個)',     price:598 },
+  karaage:        {name:'冷凍唐揚げ',        amount:'1kg',            price:678 },
+  sausage:        {name:'ウインナー',        amount:'500g',           price:298 },
+  ham_bacon:      {name:'ロースハム',        amount:'100g×2',         price:158 },
+  kimchi:         {name:'キムチ',           amount:'500g',            price:298 },
+  tuna_can:       {name:'ツナ缶',           amount:'140g×3缶',        price:198 },
+  natto:          {name:'納豆',             amount:'3パック×3',       price:198 },
+  aburaage:       {name:'油揚げ',           amount:'3枚入り',          price:88  },
+  konnyaku:       {name:'こんにゃく',        amount:'1個',             price:68  },
+  chikuwa:        {name:'ちくわ',           amount:'5本',              price:138 },
+  cheese:         {name:'とろけるチーズ',    amount:'200g',             price:298 },
+  canned_corn:    {name:'コーン缶',         amount:'400g',              price:98  },
+  wakame:         {name:'わかめ',           amount:'50g',               price:98  },
+  curry_roux:     {name:'カレールー',        amount:'1kg',               price:348 },
+  tomato_can:     {name:'トマト缶',          amount:'400g×2缶',          price:176 },
+  pasta:          {name:'パスタ',           amount:'500g',               price:108 },
+  udon:           {name:'冷凍うどん',        amount:'5食',                price:298 },
+  rice:           {name:'米',              amount:'5kg',                  price:1480},
+  bread:          {name:'食パン',           amount:'1斤',                  price:128 },
+  miso:           {name:'味噌',            amount:'750g',                  price:298 },
+  mentsuyu:       {name:'めんつゆ',         amount:'500ml',                price:198 },
+  mayo:           {name:'マヨネーズ',       amount:'500g',                  price:198 },
+  sesame:         {name:'すりごま',         amount:'50g',                   price:98  },
+};
 
-    // fraction = パッケージ1個に対して1回の食事(2人前)で使う割合
-    const meals = [
-        {
-            name: 'チキンカレー', icon: '🍛',
-            desc: '鶏むね肉・じゃがいも・にんじん・玉ねぎ',
-            ingredients: { chicken: 0.25, potato: 0.15, carrot: 0.20, onion: 0.15, curry_roux: 0.12, rice: 0.07 }
-        },
-        {
-            name: '唐揚げ定食', icon: '🍗',
-            desc: '冷凍唐揚げ・キャベツ',
-            ingredients: { karaage: 0.30, cabbage: 0.25, rice: 0.07 }
-        },
-        {
-            name: '餃子定食', icon: '🥟',
-            desc: '冷凍餃子・もやし',
-            ingredients: { gyoza: 0.40, bean_sprouts: 0.30, rice: 0.07 }
-        },
-        {
-            name: '親子丼', icon: '🍚',
-            desc: '鶏むね肉・玉ねぎ・卵',
-            ingredients: { chicken: 0.20, onion: 0.10, egg: 0.10, rice: 0.07 }
-        },
-        {
-            name: '豚の生姜焼き', icon: '🥩',
-            desc: '豚バラ・玉ねぎ',
-            ingredients: { pork: 0.35, onion: 0.10, rice: 0.07 }
-        },
-        {
-            name: 'ハンバーグ', icon: '🍔',
-            desc: '合いびき肉・玉ねぎ・卵',
-            ingredients: { ground: 0.50, onion: 0.10, egg: 0.06, rice: 0.07 }
-        },
-        {
-            name: '肉豆腐', icon: '🍲',
-            desc: '豚バラ・豆腐・玉ねぎ',
-            ingredients: { pork: 0.30, tofu: 0.35, onion: 0.10, rice: 0.07 }
-        },
-        {
-            name: 'ミートソースパスタ', icon: '🍝',
-            desc: '合いびき肉・トマト缶・パスタ',
-            ingredients: { ground: 0.50, tomato_can: 0.50, pasta: 0.50 }
-        },
-        {
-            name: '豚汁定食', icon: '🥣',
-            desc: '豚バラ・根菜・豆腐・味噌',
-            ingredients: { pork: 0.20, potato: 0.10, carrot: 0.15, onion: 0.10, tofu: 0.25, rice: 0.07 }
-        },
-        {
-            name: '野菜炒め定食', icon: '🥬',
-            desc: 'もやし・キャベツ・豚バラ',
-            ingredients: { pork: 0.30, cabbage: 0.25, bean_sprouts: 0.30, rice: 0.07 }
-        },
-        {
-            name: '麻婆豆腐', icon: '🌶️',
-            desc: '合いびき肉・豆腐',
-            ingredients: { ground: 0.40, tofu: 0.40, rice: 0.07 }
-        },
-        {
-            name: 'きのこと豚炒め', icon: '🍄',
-            desc: 'ぶなしめじ・豚バラ',
-            ingredients: { mushroom: 1.00, pork: 0.25, rice: 0.07 }
-        },
-        {
-            name: '冷凍野菜チャーハン', icon: '🍳',
-            desc: '冷凍ミックス野菜・卵',
-            ingredients: { frozen_veg: 0.50, egg: 0.10, rice: 0.07 }
-        },
-        {
-            name: 'チキンソテー', icon: '🍽️',
-            desc: '鶏むね肉・キャベツ',
-            ingredients: { chicken: 0.25, cabbage: 0.25, rice: 0.07 }
-        },
-        {
-            name: '納豆ご飯', icon: '🫘',
-            desc: '納豆',
-            ingredients: { natto: 0.33, rice: 0.07 }
-        },
-        {
-            name: 'もやし炒め定食', icon: '🌿',
-            desc: 'もやし・豚バラ・卵',
-            ingredients: { bean_sprouts: 0.50, pork: 0.20, egg: 0.06, rice: 0.07 }
-        },
-    ];
+const sideDishes = [
+  {id:'namul',   name:'もやしナムル',      icon:'🌿', ingredients:{bean_sprouts:0.5,sesame:0.08},
+   recipe:['もやしを熱湯で1〜2分茹でる','水気をよく切り、ごま油・塩・すりごまで和える']},
+  {id:'ohitashi',name:'ほうれん草おひたし', icon:'🥬', ingredients:{spinach:0.2,mentsuyu:0.05},
+   recipe:['冷凍ほうれん草を解凍して水気を絞る','めんつゆで和えてごまをふる']},
+  {id:'broc',    name:'ブロッコリーマヨ和え',icon:'🥦', ingredients:{frozen_broccoli:0.25,mayo:0.05},
+   recipe:['冷凍ブロッコリーをレンジ解凍','マヨネーズ・少量の醤油で和える']},
+  {id:'misoT',   name:'豆腐の味噌汁',      icon:'🍵', ingredients:{tofu:0.1,miso:0.07,wakame:0.05},
+   recipe:['水を沸かし豆腐を角切りで加える','わかめを戻して加え、味噌を溶く']},
+  {id:'misoE',   name:'えのき味噌汁',      icon:'🍵', ingredients:{enoki:0.4,miso:0.07},
+   recipe:['えのきをほぐして水から煮る','沸騰したら味噌を溶き入れて火を止める']},
+  {id:'cole',    name:'コールスロー',       icon:'🥗', ingredients:{cabbage:0.15,carrot:0.08,mayo:0.08},
+   recipe:['キャベツ・にんじんを千切りにして塩もみ','水気を絞りマヨ・酢・砂糖で和える']},
+  {id:'tama',    name:'卵焼き',            icon:'🍳', ingredients:{egg:0.15},
+   recipe:['卵2個を溶き砂糖・醤油少々を加える','卵焼き器で3回に分けて巻きながら焼く']},
+  {id:'kinpi',   name:'こんにゃくきんぴら', icon:'🔴', ingredients:{konnyaku:0.5,carrot:0.08},
+   recipe:['こんにゃくをちぎって乾煎り','にんじんを加え醤油・みりん・ごま油で炒め絡める']},
+  {id:'misoa',   name:'油揚げ味噌汁',      icon:'🍵', ingredients:{aburaage:0.33,wakame:0.05,miso:0.07},
+   recipe:['油揚げを細切りにする','水を沸かし油揚げとわかめを加え味噌を溶く']},
+  {id:'kino',    name:'きのこバターソテー', icon:'🍄', ingredients:{mushroom:0.5},
+   recipe:['しめじをほぐして乾煎り','バターを加えて塩コショウ・醤油少々で仕上げる']},
+  {id:'edama',   name:'枝豆塩茹で',        icon:'🫛', ingredients:{frozen_edamame:0.25},
+   recipe:['冷凍枝豆を塩水で3〜4分茹でる','ザルにあけて冷まして盛り付ける']},
+  {id:'corn',    name:'コーンバター',       icon:'🌽', ingredients:{canned_corn:0.4},
+   recipe:['フライパンにコーンを入れ中火で炒める','バターと醤油少々で仕上げる']},
+  {id:'natto2',  name:'納豆',              icon:'🫘', ingredients:{natto:0.11},
+   recipe:['納豆をよく混ぜ、からし・タレで味付けする']},
+  {id:'wakas',   name:'わかめスープ',       icon:'🌊', ingredients:{wakame:0.08,spring_onion:0.1},
+   recipe:['わかめを水で戻す','お湯にごま油・塩を溶かし、わかめとねぎを加える']},
+  {id:'daits',   name:'大根の甘酢漬け',     icon:'🥒', ingredients:{daikon:0.15},
+   recipe:['大根を薄切りにして塩もみ5分','水気を絞り砂糖・酢・塩で和えて10分置く']},
+];
 
-    // 朝食専用（手軽なもの）
-    const breakfastMeals = [
-        {
-            name: 'トースト', icon: '🍞',
-            desc: '食パン・卵',
-            ingredients: { bread: 0.30, egg: 0.06 }
-        },
-        {
-            name: '卵かけご飯', icon: '🥚',
-            desc: '卵・ご飯',
-            ingredients: { egg: 0.06, rice: 0.05 }
-        },
-        {
-            name: '納豆ご飯', icon: '🫘',
-            desc: '納豆・ご飯',
-            ingredients: { natto: 0.33, rice: 0.05 }
-        },
-    ];
+const dinners = [
+  {name:'チキンカレー',icon:'🍛',desc:'鶏むね肉・じゃがいも・にんじん・玉ねぎ',
+   ingredients:{chicken:0.25,potato:0.15,carrot:0.15,onion:0.15,curry_roux:0.10,rice:0.07},
+   recipe:['鶏むねを一口大に切り油で炒める','玉ねぎ・にんじん・じゃがいもを加えて炒める','水を加え15分煮込む','カレールーを溶かしてさらに5分煮る']},
+  {name:'唐揚げ定食',icon:'🍗',desc:'冷凍唐揚げ・キャベツ',
+   ingredients:{karaage:0.30,cabbage:0.20,rice:0.07},
+   recipe:['冷凍唐揚げをトースターまたは揚げ油で加熱','キャベツを千切りにして添える','ご飯と一緒に盛り付ける']},
+  {name:'餃子定食',icon:'🥟',desc:'冷凍餃子・もやし',
+   ingredients:{gyoza:0.35,bean_sprouts:0.5,rice:0.07},
+   recipe:['フライパンに餃子を並べ水を加えて蓋をし5分蒸し焼き','蓋を外して水分を飛ばしカリッと仕上げる','もやしを別炒めして添える']},
+  {name:'親子丼',icon:'🍚',desc:'鶏むね肉・玉ねぎ・卵',
+   ingredients:{chicken:0.20,onion:0.10,egg:0.12,rice:0.07},
+   recipe:['鶏むねを薄切り、玉ねぎをスライス','だし・醤油・みりんで玉ねぎと鶏肉を煮る','溶き卵を回し入れ半熟でご飯に乗せる']},
+  {name:'豚の生姜焼き',icon:'🥩',desc:'豚バラ・玉ねぎ',
+   ingredients:{pork:0.35,onion:0.12,rice:0.07},
+   recipe:['玉ねぎを炒め豚バラを加える','醤油・みりん・酒・しょうがすりおろしで炒め絡める']},
+  {name:'ハンバーグ',icon:'🍔',desc:'合いびき肉・玉ねぎ・卵',
+   ingredients:{ground:0.50,onion:0.10,egg:0.06,rice:0.07},
+   recipe:['玉ねぎみじん切りを炒めて冷ます','合いびき・玉ねぎ・卵・塩コショウをよくこねる','フライパンで両面を焼き蓋をして蒸し焼き']},
+  {name:'肉豆腐',icon:'🍲',desc:'豚バラ・豆腐・玉ねぎ',
+   ingredients:{pork:0.25,tofu:0.30,onion:0.10,rice:0.07},
+   recipe:['豚バラと玉ねぎを炒める','豆腐を加えだし・醤油・みりんで煮込む']},
+  {name:'ミートソースパスタ',icon:'🍝',desc:'合いびき肉・トマト缶',
+   ingredients:{ground:0.50,tomato_can:0.50,pasta:0.50,onion:0.08},
+   recipe:['玉ねぎみじん切りと合いびきを炒める','トマト缶を加え20分煮込む','茹でたパスタに乗せる']},
+  {name:'豚汁',icon:'🥣',desc:'豚バラ・根菜・豆腐・味噌',
+   ingredients:{pork:0.20,potato:0.10,carrot:0.12,onion:0.08,tofu:0.20,miso:0.10,rice:0.07},
+   recipe:['豚バラと根菜を炒める','水を加え柔らかくなるまで煮る','豆腐を加えて味噌を溶き入れる']},
+  {name:'野菜炒め',icon:'🥬',desc:'もやし・キャベツ・豚バラ',
+   ingredients:{pork:0.25,cabbage:0.20,bean_sprouts:0.5,rice:0.07},
+   recipe:['豚バラを強火で炒め野菜を加える','塩コショウ・醤油・ごま油で手早く炒め合わせる']},
+  {name:'麻婆豆腐',icon:'🌶️',desc:'合いびき肉・豆腐',
+   ingredients:{ground:0.40,tofu:0.40,spring_onion:0.1,rice:0.07},
+   recipe:['合いびきとねぎを炒め豆板醤・醤油・みりんで味付け','豆腐を加えて片栗粉でとろみをつける']},
+  {name:'きのこと豚バラ炒め',icon:'🍄',desc:'ぶなしめじ・豚バラ',
+   ingredients:{mushroom:1.0,pork:0.25,rice:0.07},
+   recipe:['豚バラを炒めしめじをほぐして加える','醤油・みりん・ごま油で炒め合わせる']},
+  {name:'チャーハン',icon:'🍳',desc:'冷凍ミックス野菜・卵',
+   ingredients:{frozen_veg:0.40,egg:0.10,rice:0.08},
+   recipe:['卵を溶き熱したフライパンで炒める','ご飯・冷凍野菜を加えて強火で炒める','醤油・塩コショウ・ごま油で仕上げる']},
+  {name:'チキンソテー',icon:'🍽️',desc:'鶏むね肉・キャベツ',
+   ingredients:{chicken:0.25,cabbage:0.20,rice:0.07},
+   recipe:['鶏むねを叩いて薄くし塩コショウ','両面をこんがり焼いてキャベツを添える']},
+  {name:'もやし炒め',icon:'🌿',desc:'もやし・豚バラ・卵',
+   ingredients:{bean_sprouts:0.5,pork:0.20,egg:0.08,rice:0.07},
+   recipe:['豚バラを炒めもやしを加えて強火','溶き卵を加えて塩コショウ・ごま油で仕上げる']},
+  {name:'鶏むね照り焼き',icon:'🍯',desc:'鶏むね肉',
+   ingredients:{chicken:0.25,rice:0.07},
+   recipe:['鶏むねを観音開きにして塩コショウ','皮目から焼き裏返す','醤油・みりん・酒・砂糖を絡めて照りを出す']},
+  {name:'豚キムチ炒め',icon:'🥬',desc:'豚バラ・キムチ・豆腐',
+   ingredients:{pork:0.30,kimchi:0.25,tofu:0.25,rice:0.07},
+   recipe:['豚バラを炒め水分を飛ばす','キムチを加えて炒め豆腐をほぐしながら加える','醤油・ごま油で仕上げてごまをふる']},
+  {name:'ツナと野菜のパスタ',icon:'🍝',desc:'ツナ缶・キャベツ',
+   ingredients:{tuna_can:0.33,cabbage:0.20,pasta:0.50},
+   recipe:['パスタを茹でキャベツを茹で上がり直前に加える','ツナ・オリーブ油・醤油で和える']},
+  {name:'ヤンニョムチキン',icon:'🌶️',desc:'鶏むね肉・コチュジャン',
+   ingredients:{chicken:0.25,rice:0.07},
+   recipe:['鶏むねを一口大に切り片栗粉をまぶして揚げ焼き','コチュジャン・醤油・砂糖・酢でタレを作る','チキンにタレを絡める']},
+  {name:'大根と豚バラの煮物',icon:'🍲',desc:'大根・豚バラ',
+   ingredients:{daikon:0.35,pork:0.25,rice:0.07},
+   recipe:['大根を輪切りにして下茹で','豚バラと大根をだし・醤油・みりんで落し蓋をして20分煮る']},
+  {name:'白菜と豚バラのミルフィーユ鍋',icon:'🥬',desc:'白菜・豚バラ',
+   ingredients:{hakusai:0.50,pork:0.30,miso:0.08,rice:0.07},
+   recipe:['白菜と豚バラを交互に重ねて鍋に詰める','だし・醤油・みりんを注ぎ蓋をして15分煮る']},
+  {name:'豆腐とキムチの炒め',icon:'🌶️',desc:'豆腐・キムチ',
+   ingredients:{tofu:0.40,kimchi:0.20,pork:0.15,rice:0.07},
+   recipe:['豆腐を水切りしキッチンペーパーで10分','豚バラ・キムチ・豆腐を炒め醤油・ごま油で仕上げる']},
+  {name:'ウインナーと野菜の炒め',icon:'🌭',desc:'ウインナー・キャベツ・玉ねぎ',
+   ingredients:{sausage:0.30,cabbage:0.20,onion:0.10,rice:0.07},
+   recipe:['ウインナーを斜め切りにする','玉ねぎ・キャベツを炒めウインナーを加える','ケチャップ・醤油・塩コショウで味付け']},
+  {name:'えのきと豚バラ炒め',icon:'🍄',desc:'えのき・豚バラ',
+   ingredients:{enoki:1.0,pork:0.25,rice:0.07},
+   recipe:['えのきをほぐす','豚バラを炒めえのきを加えてさっと炒める','醤油・みりん・ごま油で仕上げる']},
+  {name:'豚こまの甘辛丼',icon:'🍚',desc:'豚こま切れ・玉ねぎ・卵',
+   ingredients:{pork_kom:0.50,onion:0.12,egg:0.08,rice:0.07},
+   recipe:['豚こまと玉ねぎを炒める','醤油・みりん・砂糖・酒で甘辛に味付け','ご飯に乗せて卵黄を添える']},
+  {name:'キャベツと鶏むね塩炒め',icon:'🥬',desc:'鶏むね肉・キャベツ',
+   ingredients:{chicken:0.25,cabbage:0.25,rice:0.07},
+   recipe:['鶏むねを薄切りにして片栗粉をまぶす','にんにくで香りを出し鶏肉を炒める','キャベツを加えて塩・ごま油で仕上げる']},
+  {name:'ツナキムチ豆腐',icon:'🌶️',desc:'ツナ缶・キムチ・豆腐',
+   ingredients:{tuna_can:0.33,kimchi:0.20,tofu:0.35,rice:0.07},
+   recipe:['豆腐を水切りして大きめに切る','ツナとキムチを醤油・ごま油で混ぜてタレを作る','豆腐に乗せるだけ（火不要）']},
+  {name:'もやしと豚バラの蒸し炒め',icon:'🌿',desc:'もやし・豚バラ',
+   ingredients:{bean_sprouts:1.0,pork:0.25,rice:0.07},
+   recipe:['フライパンに豚バラ・もやしを重ねて入れる','水を少量加えて蓋をして3分蒸す','ポン酢・ごま油で仕上げる']},
+  {name:'大根とこんにゃくの煮物',icon:'🍲',desc:'大根・こんにゃく',
+   ingredients:{daikon:0.30,konnyaku:0.50,carrot:0.10,rice:0.07},
+   recipe:['大根・にんじんを切り、こんにゃくをちぎる','だし・醤油・みりん・砂糖で落し蓋をして20分煮る']},
+  {name:'冷凍うどん鍋',icon:'🍜',desc:'冷凍うどん・豚バラ・白菜',
+   ingredients:{udon:0.40,pork:0.20,hakusai:0.25},
+   recipe:['だし・醤油・みりんでスープを作る','白菜・豚バラを入れて煮る','冷凍うどんを加えてひと煮立ちさせる']},
+  {name:'キャベツとツナのパスタ',icon:'🍝',desc:'ツナ缶・キャベツ',
+   ingredients:{tuna_can:0.33,cabbage:0.25,pasta:0.50},
+   recipe:['パスタを茹でる（茹で汁を残す）','キャベツを炒めツナ・醤油・オリーブ油・茹で汁でパスタと和える']},
+  {name:'オムライス',icon:'🍳',desc:'卵・ご飯・コーン缶',
+   ingredients:{egg:0.15,rice:0.08,canned_corn:0.30},
+   recipe:['ご飯にケチャップ・コーンを混ぜてチキンライス風に','薄焼き卵を作ってご飯を包む','ケチャップをかけて完成']},
+  {name:'ちくわと野菜の炒め',icon:'🍢',desc:'ちくわ・キャベツ・にんじん',
+   ingredients:{chikuwa:0.40,cabbage:0.20,carrot:0.10,rice:0.07},
+   recipe:['ちくわを斜め切りにする','にんじん・キャベツ・ちくわを炒める','醤油・みりん・塩コショウで味付け']},
+  {name:'豆腐ステーキ',icon:'🟫',desc:'豆腐・きのこ',
+   ingredients:{tofu:0.40,mushroom:0.50,rice:0.07},
+   recipe:['豆腐をしっかり水切りして厚め切り','フライパンで両面をこんがり焼く','きのこを炒め醤油・みりんのソースをかける']},
+  {name:'豚こまとキャベツ炒め',icon:'🥬',desc:'豚こま切れ・キャベツ',
+   ingredients:{pork_kom:0.50,cabbage:0.25,rice:0.07},
+   recipe:['豚こまを塩コショウで炒める','キャベツをざく切りにして加える','にんにく醤油・ごま油で仕上げる']},
+  {name:'チキントマト煮',icon:'🍅',desc:'鶏むね肉・トマト缶・玉ねぎ',
+   ingredients:{chicken:0.25,tomato_can:0.50,onion:0.10,rice:0.07},
+   recipe:['鶏むねを一口大に切り炒める','玉ねぎを加えてトマト缶を入れ塩コショウで20分煮る']},
+  {name:'ウインナーじゃがいもソテー',icon:'🌭',desc:'ウインナー・じゃがいも',
+   ingredients:{sausage:0.25,potato:0.15,rice:0.07},
+   recipe:['じゃがいもを薄切りにしてレンジで3分加熱','ウインナーと炒めケチャップ・塩コショウで味付け']},
+  {name:'白菜と豆腐の中華スープ煮',icon:'🍵',desc:'白菜・豆腐・卵',
+   ingredients:{hakusai:0.30,tofu:0.25,egg:0.08,rice:0.07},
+   recipe:['白菜を炒め水・鶏がらスープの素を加えて煮る','豆腐を加え、溶き卵を回し入れてスープ丼に']},
+  {name:'鶏むねとえのき炒め',icon:'🍄',desc:'鶏むね肉・えのき',
+   ingredients:{chicken:0.25,enoki:1.0,rice:0.07},
+   recipe:['鶏むねを薄切りにして片栗粉をまぶす','えのきと炒め醤油・みりん・ごま油で仕上げる']},
+  {name:'ブロッコリーチーズオムレツ',icon:'🍳',desc:'卵・冷凍ブロッコリー・チーズ',
+   ingredients:{egg:0.15,frozen_broccoli:0.20,cheese:0.15,rice:0.07},
+   recipe:['冷凍ブロッコリーをレンジ解凍して小房に分ける','卵を溶きブロッコリー・チーズを混ぜる','フライパンで蓋をして弱火で蒸し焼きにする']},
+  {name:'豚こまと大根の煮物',icon:'🍲',desc:'豚こま切れ・大根',
+   ingredients:{pork_kom:0.40,daikon:0.30,rice:0.07},
+   recipe:['大根を乱切りにして下茹で','豚こまと大根をだし・醤油・みりん・砂糖でことこと20分煮る']},
+  {name:'ほうれん草と卵の炒め',icon:'🥬',desc:'冷凍ほうれん草・卵',
+   ingredients:{spinach:0.30,egg:0.12,rice:0.07},
+   recipe:['冷凍ほうれん草を解凍して水気を切る','卵を炒り卵にしてほうれん草を加える','醤油・塩コショウで仕上げる']},
+  {name:'鶏むねの唐揚げ（手作り）',icon:'🍗',desc:'鶏むね肉',
+   ingredients:{chicken:0.30,rice:0.07},
+   recipe:['鶏むねを一口大に切り醤油・酒・しょうがで下味をつける','片栗粉をまぶして揚げ油で揚げる']},
+  {name:'ハムエッグ丼',icon:'🥚',desc:'ロースハム・卵',
+   ingredients:{ham_bacon:0.30,egg:0.12,rice:0.07},
+   recipe:['ハムをフライパンで焼く','目玉焼きを作りご飯に乗せてハムと一緒に盛る','醤油かポン酢をかける']},
+];
 
-    // セール価格マップ { productId: salePrice }
-    let salePrices = {};
+const lunchMeals = [
+  {name:'チキンカレー',icon:'🍛',desc:'鶏むね肉・カレー',
+   ingredients:{chicken:0.20,onion:0.10,curry_roux:0.10,rice:0.07},
+   recipe:['鶏むねと玉ねぎを炒める','水を加えて15分煮てカレールーを溶かす']},
+  {name:'ミートソースパスタ',icon:'🍝',desc:'合いびき肉・トマト缶',
+   ingredients:{ground:0.40,tomato_can:0.50,pasta:0.50},
+   recipe:['合いびきと玉ねぎを炒める','トマト缶を加えて20分煮てパスタに乗せる']},
+  {name:'ツナキャベツパスタ',icon:'🍝',desc:'ツナ缶・キャベツ',
+   ingredients:{tuna_can:0.33,cabbage:0.25,pasta:0.50},
+   recipe:['パスタを茹でる','ツナ・キャベツ・醤油・オリーブ油で和える']},
+  {name:'チャーハン',icon:'🍳',desc:'冷凍野菜・卵',
+   ingredients:{frozen_veg:0.40,egg:0.10,rice:0.08},
+   recipe:['卵・ご飯・冷凍野菜を強火で炒める','醤油・塩コショウ・ごま油で仕上げる']},
+  {name:'温かいうどん',icon:'🍜',desc:'冷凍うどん・長ねぎ',
+   ingredients:{udon:0.40,spring_onion:0.15,mentsuyu:0.10},
+   recipe:['うどんを解凍してお湯で温める','めんつゆ・水でスープを作りうどんを入れねぎを添える']},
+  {name:'野菜炒め定食',icon:'🥬',desc:'もやし・キャベツ・豚バラ',
+   ingredients:{pork:0.20,cabbage:0.20,bean_sprouts:0.5,rice:0.07},
+   recipe:['豚バラを炒めもやし・キャベツを加える','塩コショウ・醤油・ごま油で仕上げる']},
+  {name:'親子丼',icon:'🍚',desc:'鶏むね肉・玉ねぎ・卵',
+   ingredients:{chicken:0.20,onion:0.10,egg:0.12,rice:0.07},
+   recipe:['鶏むねと玉ねぎをだし・醤油・みりんで煮る','溶き卵を入れて半熟でご飯に乗せる']},
+  {name:'豚こま丼',icon:'🍚',desc:'豚こま切れ・玉ねぎ',
+   ingredients:{pork_kom:0.40,onion:0.10,rice:0.07},
+   recipe:['豚こまと玉ねぎを甘辛く炒める','ご飯に乗せてごまを添える']},
+  {name:'豆腐キムチ丼',icon:'🌶️',desc:'豆腐・キムチ',
+   ingredients:{tofu:0.35,kimchi:0.20,rice:0.07},
+   recipe:['豆腐を水切りしてほぐす','キムチ・醤油・ごま油で和えてご飯に乗せる']},
+  {name:'納豆ご飯',icon:'🫘',desc:'納豆・ご飯',
+   ingredients:{natto:0.33,rice:0.07,egg:0.06},
+   recipe:['納豆をよく混ぜてタレで味付け','ご飯に乗せ卵かけや長ねぎを添えても']},
+];
 
-    // ページ読み込み時にセール情報を取得
-    async function loadSaleData() {
-        const banner   = document.getElementById('saleBanner');
-        const dot      = document.getElementById('saleDot');
-        const text     = document.getElementById('saleBannerText');
-        const dateEl   = document.getElementById('saleBannerDate');
+const breakfastMeals = [
+  {name:'トーストと卵',icon:'🍞',desc:'食パン・卵',
+   ingredients:{bread:0.25,egg:0.08},
+   recipe:['食パンをトースターで2〜3分焼く','目玉焼きまたは炒り卵を作り添える']},
+  {name:'卵かけご飯',icon:'🥚',desc:'卵・ご飯',
+   ingredients:{egg:0.06,rice:0.05},
+   recipe:['炊きたてのご飯に生卵を乗せる','醤油をかけて混ぜながら食べる']},
+  {name:'納豆ご飯',icon:'🫘',desc:'納豆・ご飯',
+   ingredients:{natto:0.33,rice:0.05},
+   recipe:['納豆をよく混ぜてタレ・からしで味付け','ご飯に乗せて長ねぎや卵黄を添えても']},
+  {name:'ハムトースト',icon:'🥪',desc:'食パン・ロースハム',
+   ingredients:{bread:0.25,ham_bacon:0.25},
+   recipe:['食パンにマヨネーズを塗る','ハムを乗せてトースターで2〜3分焼く']},
+  {name:'ウインナーエッグトースト',icon:'🌭',desc:'食パン・ウインナー・卵',
+   ingredients:{bread:0.25,sausage:0.10,egg:0.08},
+   recipe:['ウインナーをフライパンで焼く','目玉焼きを作り食パンと一緒に盛り付ける']},
+];
 
-        try {
-            const res  = await fetch('./sale_data.json?_=' + Date.now());
-            const data = await res.json();
+let salePrices = {};
 
-            dateEl.textContent = data.updated ? `更新日: ${data.updated}` : '';
-
-            // 献立マッチ品を価格マップに登録
-            if (data.items && data.items.length > 0) {
-                data.items.forEach(item => {
-                    if (item.productId && item.salePrice) {
-                        salePrices[item.productId] = item.salePrice;
-                    }
-                });
-            }
-
-            // 今週のセール品一覧を表示
-            const allItems = data.allSaleItems || [];
-            if (data.success && allItems.length > 0) {
-                const grid = document.getElementById('allSaleGrid');
-                grid.innerHTML = '';
-                allItems.forEach(item => {
-                    const card = document.createElement('div');
-                    card.className = 'sale-item-card';
-                    card.innerHTML = `
-                        <div class="sale-item-name">${item.name}</div>
-                        <div class="sale-item-price">¥${item.price.toLocaleString()}</div>
-                    `;
-                    grid.appendChild(card);
-                });
-                document.getElementById('allSaleSection').classList.add('visible');
-
-                const matchCount = Object.keys(salePrices).length;
-                banner.className = 'sale-banner ok';
-                dot.className    = 'sale-dot ok';
-                text.textContent = matchCount > 0
-                    ? `🏷️ 今週${allItems.length}品がセール中（うち${matchCount}品を献立に反映）`
-                    : `🏷️ 今週${allItems.length}品がセール中（献立対象品はなし）`;
-            } else {
-                banner.className = 'sale-banner fail';
-                dot.className    = 'sale-dot fail';
-                text.textContent = data.success
-                    ? 'セール対象の商品は現在なし（通常価格で計算）'
-                    : 'セール情報を取得できませんでした（通常価格で計算）';
-            }
-        } catch (e) {
-            banner.className = 'sale-banner fail';
-            dot.className    = 'sale-dot fail';
-            text.textContent = 'セール情報ファイルが見つかりません（通常価格で計算）';
-        }
+async function loadSaleData() {
+  const banner = document.getElementById('saleBanner');
+  const dot    = document.getElementById('saleDot');
+  const text   = document.getElementById('saleBannerText');
+  const dateEl = document.getElementById('saleBannerDate');
+  try {
+    const res  = await fetch('./sale_data.json?_=' + Date.now());
+    const data = await res.json();
+    dateEl.textContent = data.updated ? '更新日: ' + data.updated : '';
+    if (data.items && data.items.length > 0) {
+      data.items.forEach(item => { if (item.productId && item.salePrice) salePrices[item.productId] = item.salePrice; });
     }
-
-    loadSaleData();
-
-    const dayNames = ['月', '火', '水', '木', '金', '土', '日'];
-
-    function pickRandom(arr, n) {
-        const result = [];
-        const pool = [...arr];
-        while (result.length < n) {
-            pool.sort(() => Math.random() - 0.5);
-            result.push(...pool);
-        }
-        return result.slice(0, n);
+    const allItems = data.allSaleItems || [];
+    if (data.success && allItems.length > 0) {
+      const grid = document.getElementById('allSaleGrid');
+      grid.innerHTML = '';
+      allItems.forEach(item => {
+        const c = document.createElement('div');
+        c.className = 'sale-item-card';
+        c.innerHTML = '<div class="sale-item-name">' + item.name + '</div><div class="sale-item-price">¥' + item.price.toLocaleString() + '</div>';
+        grid.appendChild(c);
+      });
+      document.getElementById('allSaleSection').classList.add('visible');
+      const mc = Object.keys(salePrices).length;
+      banner.className = 'sale-banner ok'; dot.className = 'sale-dot ok';
+      text.textContent = mc > 0
+        ? '🏷️ 今週' + allItems.length + '品がセール中（うち' + mc + '品を献立に反映）'
+        : '🏷️ 今週' + allItems.length + '品がセール中（献立対象品はなし）';
+    } else {
+      banner.className = 'sale-banner fail'; dot.className = 'sale-dot fail';
+      text.textContent = data.success ? 'セール対象の商品は現在なし（通常価格で計算）' : 'セール情報を取得できませんでした（通常価格で計算）';
     }
+  } catch(e) {
+    banner.className = 'sale-banner fail'; dot.className = 'sale-dot fail';
+    text.textContent = 'セール情報ファイルが見つかりません（通常価格で計算）';
+  }
+}
+loadSaleData();
 
-    function generate() {
-        const days = parseInt(document.getElementById('days').value);
-        const persons = parseInt(document.getElementById('persons').value);
-        const mealsPerDay = parseInt(document.getElementById('mealsPerDay').value);
-        const personFactor = persons / 2;
+function pickRandom(arr, n) {
+  const result = [], pool = [...arr];
+  while (result.length < n) { pool.sort(() => Math.random() - 0.5); result.push(...pool); }
+  return result.slice(0, n);
+}
 
-        // 食事時間帯ラベルとメール種別を決定
-        let timeSlots;
-        if (mealsPerDay === 1)      timeSlots = [{ label: '夕食', pool: meals }];
-        else if (mealsPerDay === 2) timeSlots = [{ label: '昼食', pool: meals }, { label: '夕食', pool: meals }];
-        else                        timeSlots = [{ label: '朝食', pool: breakfastMeals }, { label: '昼食', pool: meals }, { label: '夕食', pool: meals }];
+function getSlotMealTypes(type) {
+  if (type === 'dinner')       return [{label:'夕食', pool:dinners,        isDinner:true  }];
+  if (type === 'lunch')        return [{label:'昼食', pool:lunchMeals,     isDinner:false }];
+  if (type === 'breakfast')    return [{label:'朝食', pool:breakfastMeals, isDinner:false }];
+  if (type === 'lunch_dinner') return [{label:'昼食', pool:lunchMeals, isDinner:false}, {label:'夕食', pool:dinners, isDinner:true}];
+  if (type === 'all')          return [{label:'朝食', pool:breakfastMeals, isDinner:false}, {label:'昼食', pool:lunchMeals, isDinner:false}, {label:'夕食', pool:dinners, isDinner:true}];
+  return [];
+}
 
-        // 各食事時間帯ごとにランダム選択
-        const plan = []; // [{ day, timeLabel, meal }]
-        for (const slot of timeSlots) {
-            const picked = pickRandom(slot.pool, days);
-            for (let d = 0; d < days; d++) {
-                plan.push({ day: d, timeLabel: slot.label, meal: picked[d] });
-            }
+function openModal(meal, sides) {
+  document.getElementById('mIcon').textContent = meal.icon;
+  document.getElementById('mTitle').textContent = meal.name;
+  document.getElementById('mIngr').innerHTML = Object.keys(meal.ingredients)
+    .map(id => products[id] ? '<span style="display:inline-block;background:#e8f5e9;border-radius:5px;padding:3px 8px;margin:3px;font-size:0.83rem;">' + products[id].name + '</span>' : '')
+    .join('');
+  document.getElementById('mRecipe').innerHTML = meal.recipe
+    .map((s,i) => '<li><span class="step-num">' + (i+1) + '</span><span>' + s + '</span></li>')
+    .join('');
+  const mSides = document.getElementById('mSides');
+  if (sides && sides.length > 0) {
+    mSides.innerHTML = '<div class="modal-sec">今日の副菜</div>' +
+      sides.map(sd =>
+        '<div class="side-card"><div class="side-card-name">' + sd.icon + ' ' + sd.name + '</div>' +
+        '<ul class="side-steps">' +
+        sd.recipe.map((s,i) => '<li><span class="side-step-num">' + (i+1) + '</span><span>' + s + '</span></li>').join('') +
+        '</ul></div>'
+      ).join('');
+  } else { mSides.innerHTML = ''; }
+  document.getElementById('recipeModal').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('recipeModal').classList.remove('open');
+}
+function closeModalOverlay(e) {
+  if (e.target === document.getElementById('recipeModal')) closeModal();
+}
+
+function generate() {
+  const persons = parseInt(document.getElementById('persons').value);
+  const pf = persons / 2;
+  const slotConfigs = [
+    {days:parseInt(document.getElementById('s1d').value), type:document.getElementById('s1t').value, label:'スロット1'},
+    {days:parseInt(document.getElementById('s2d').value), type:document.getElementById('s2t').value, label:'スロット2'},
+    {days:parseInt(document.getElementById('s3d').value), type:document.getElementById('s3t').value, label:'スロット3'},
+  ].filter(s => s.days > 0);
+
+  if (slotConfigs.length === 0) { alert('日数を1日以上に設定してください'); return; }
+
+  const content = document.getElementById('mealContent');
+  content.innerHTML = '';
+  const consumption = {};
+
+  const typeLabel = {dinner:'夕食のみ',lunch:'昼食のみ',breakfast:'朝食のみ',lunch_dinner:'昼・夕食',all:'朝・昼・夕食'};
+
+  for (const slot of slotConfigs) {
+    const mealTypes = getSlotMealTypes(slot.type);
+    const group = document.createElement('div');
+    group.className = 'slot-group';
+    group.innerHTML = '<div class="slot-group-title">' + slot.days + '日 × ' + (typeLabel[slot.type] || '') + '</div>';
+
+    const picks = {};
+    for (const mt of mealTypes) picks[mt.label] = pickRandom(mt.pool, slot.days);
+
+    for (let d = 0; d < slot.days; d++) {
+      const dayBlock = document.createElement('div');
+      dayBlock.className = 'day-block';
+      dayBlock.innerHTML = '<div class="day-block-title">' + (d + 1) + '日目</div>';
+      const dayMeals = document.createElement('div');
+      dayMeals.className = 'day-meals';
+
+      for (const mt of mealTypes) {
+        const meal = picks[mt.label][d];
+        let sides = [];
+        if (mt.isDinner) {
+          sides = [...sideDishes].sort(() => Math.random() - 0.5).slice(0, 2);
         }
-        // 日付順にソート
-        plan.sort((a, b) => a.day - b.day || timeSlots.findIndex(s => s.label === a.timeLabel) - timeSlots.findIndex(s => s.label === b.timeLabel));
-
-        // 献立グリッド
-        const grid = document.getElementById('mealGrid');
-        grid.innerHTML = '';
-        for (const entry of plan) {
-            const card = document.createElement('div');
-            card.className = 'meal-card';
-            const timeLabel = mealsPerDay > 1 ? `<br>${entry.timeLabel}` : '';
-            card.innerHTML = `
-                <div class="day-label">${dayNames[entry.day]}曜日${timeLabel}</div>
-                <div class="meal-icon">${entry.meal.icon}</div>
-                <div class="meal-name">${entry.meal.name}</div>
-                <div class="meal-desc">${entry.meal.desc}</div>
-            `;
-            grid.appendChild(card);
+        for (const [id, fr] of Object.entries(meal.ingredients)) {
+          consumption[id] = (consumption[id] || 0) + fr * pf;
         }
-
-        // 食材消費量を集計
-        const consumption = {};
-        for (const entry of plan) {
-            for (const [id, fraction] of Object.entries(entry.meal.ingredients)) {
-                consumption[id] = (consumption[id] || 0) + fraction * personFactor;
-            }
+        for (const sd of sides) {
+          for (const [id, fr] of Object.entries(sd.ingredients)) {
+            consumption[id] = (consumption[id] || 0) + fr * pf;
+          }
         }
-
-        // 買い物リスト生成
-        const listEl = document.getElementById('shoppingList');
-        listEl.innerHTML = '';
-        let total = 0;
-
-        // 消費量が多い順に並べる
-        const sortedItems = Object.entries(consumption).sort((a, b) => {
-            const costA = Math.ceil(a[1]) * products[a[0]].price;
-            const costB = Math.ceil(b[1]) * products[b[0]].price;
-            return costB - costA;
-        });
-
-        for (const [id, consumed] of sortedItems) {
-            const prod      = products[id];
-            const packs     = Math.ceil(consumed);
-            const unitPrice = salePrices[id] ?? prod.price;
-            const isOnSale  = salePrices[id] !== undefined;
-            const cost      = packs * unitPrice;
-            total += cost;
-
-            const priceHtml = isOnSale
-                ? `<span class="price-normal-strike">¥${prod.price.toLocaleString()}</span>
-                   <span class="price-sale">¥${unitPrice.toLocaleString()}</span>`
-                : `¥${unitPrice.toLocaleString()}`;
-
-            const badgeHtml = isOnSale ? '<span class="sale-badge">SALE</span>' : '';
-
-            const item = document.createElement('div');
-            item.className = 'shopping-item';
-            item.innerHTML = `
-                <div class="item-left">
-                    <div class="item-name">${prod.name}${badgeHtml}</div>
-                    <div class="item-detail">${prod.amount}</div>
-                </div>
-                <div class="item-right">
-                    <div class="item-qty">${packs}個</div>
-                    <div class="item-price">${priceHtml} × ${packs}</div>
-                </div>
-            `;
-            listEl.appendChild(item);
-        }
-
-        // 合計
-        const perDay = Math.round(total / days);
-        const perPerson = Math.round(total / persons);
-        document.getElementById('totalAmount').textContent = `¥${total.toLocaleString()}`;
-        document.getElementById('totalBreakdown').textContent =
-            `1日あたり約 ¥${perDay.toLocaleString()} ／ 1人あたり約 ¥${perPerson.toLocaleString()}`;
-
-        // 表示
-        document.getElementById('mealSection').classList.add('visible');
-        document.getElementById('shoppingSection').classList.add('visible');
-        document.getElementById('totalSection').classList.add('visible');
-
-        document.getElementById('mealSection').scrollIntoView({ behavior: 'smooth' });
+        const card = document.createElement('div');
+        card.className = 'meal-card';
+        card.innerHTML =
+          '<div class="type-label">' + mt.label + '</div>' +
+          '<div class="meal-icon">' + meal.icon + '</div>' +
+          '<div class="meal-name">' + meal.name + '</div>' +
+          '<div class="meal-desc">' + meal.desc + '</div>' +
+          (sides.length > 0 ? '<div class="side-info">副菜: ' + sides.map(s => s.name).join('・') + '</div>' : '') +
+          '<div class="recipe-hint">タップでレシピを見る</div>';
+        card.onclick = () => openModal(meal, sides);
+        dayMeals.appendChild(card);
+      }
+      dayBlock.appendChild(dayMeals);
+      group.appendChild(dayBlock);
     }
+    content.appendChild(group);
+  }
+
+  const listEl = document.getElementById('shoppingList');
+  listEl.innerHTML = '';
+  let total = 0;
+  const totalDays = slotConfigs.reduce((s, c) => s + c.days, 0);
+
+  Object.entries(consumption)
+    .filter(([id]) => products[id])
+    .sort(([ai, av], [bi, bv]) => Math.ceil(bv) * products[bi].price - Math.ceil(av) * products[ai].price)
+    .forEach(([id, consumed]) => {
+      const prod = products[id];
+      const packs = Math.ceil(consumed);
+      const unitPrice = salePrices[id] ?? prod.price;
+      const isOnSale  = salePrices[id] !== undefined;
+      const cost = packs * unitPrice;
+      total += cost;
+      const priceHtml = isOnSale
+        ? '<span class="price-normal-strike">¥' + prod.price.toLocaleString() + '</span><span class="price-sale">¥' + unitPrice.toLocaleString() + '</span>'
+        : '¥' + unitPrice.toLocaleString();
+      const badge = isOnSale ? '<span class="sale-badge">SALE</span>' : '';
+      const item = document.createElement('div');
+      item.className = 'shopping-item';
+      item.innerHTML =
+        '<div class="item-left"><div class="item-name">' + prod.name + badge + '</div><div class="item-detail">' + prod.amount + '</div></div>' +
+        '<div class="item-right"><div class="item-qty">' + packs + '個</div><div class="item-price">' + priceHtml + ' × ' + packs + '</div></div>';
+      listEl.appendChild(item);
+    });
+
+  document.getElementById('totalAmount').textContent = '¥' + total.toLocaleString();
+  document.getElementById('totalBreakdown').textContent =
+    '1日あたり約 ¥' + Math.round(total / totalDays).toLocaleString() + ' ／ 1人あたり約 ¥' + Math.round(total / persons).toLocaleString();
+
+  document.getElementById('mealSection').classList.add('visible');
+  document.getElementById('shoppingSection').classList.add('visible');
+  document.getElementById('totalSection').classList.add('visible');
+  document.getElementById('mealSection').scrollIntoView({behavior:'smooth'});
+}
 </script>
-
 </body>
 </html>
