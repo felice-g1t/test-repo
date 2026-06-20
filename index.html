@@ -136,6 +136,38 @@ header p{font-size:0.9rem;opacity:0.85}
   .meal-card{max-width:100%}
 }
 .meal-thumb{width:100%;height:80px;object-fit:cover;border-radius:7px;margin-bottom:7px;display:block}
+.btn-fav-meal{background:none;border:none;font-size:0.92rem;cursor:pointer;padding:2px 4px;border-radius:5px;color:#ccc;line-height:1;flex-shrink:0;transition:color 0.15s}
+.btn-fav-meal.fav{color:#f5a623}
+.btn-fav-meal:hover{color:#f5a623}
+.btn-fav-prod{background:none;border:none;font-size:0.9rem;cursor:pointer;padding:3px 5px;border-radius:5px;color:#ccc;line-height:1;flex-shrink:0;transition:color 0.15s}
+.btn-fav-prod.fav{color:#f5a623}
+.btn-fav-prod:hover{color:#f5a623}
+.btn-req-open{display:block;width:100%;margin-top:8px;padding:9px;background:#fff8e1;color:#795548;border:1.5px solid #ffe082;border-radius:8px;font-size:0.85rem;cursor:pointer;text-align:center;transition:background 0.15s}
+.btn-req-open:hover{background:#fff3cd;border-color:#ffd54f}
+.rq-modal{max-width:520px;padding:20px}
+.rq-tabs{display:flex;gap:6px;margin-bottom:14px;border-bottom:2px solid #eee;padding-bottom:0}
+.rq-tab{padding:7px 16px;border:none;background:none;font-size:0.88rem;cursor:pointer;color:#999;border-bottom:2px solid transparent;margin-bottom:-2px;border-radius:0}
+.rq-tab.active{color:#2d7a3a;border-bottom-color:#2d7a3a;font-weight:bold}
+.rq-stitle{font-size:0.78rem;font-weight:bold;color:#666;margin:12px 0 5px;letter-spacing:0.5px}
+.rq-search{width:100%;padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:0.86rem;margin-bottom:5px;box-sizing:border-box}
+.rq-search:focus{outline:none;border-color:#2d7a3a}
+.rq-results{max-height:130px;overflow-y:auto;border:1px solid #eee;border-radius:8px;margin-bottom:7px}
+.rq-result-item{padding:7px 10px;font-size:0.84rem;cursor:pointer}
+.rq-result-item:hover{background:#f0f9f1}
+.rq-result-item + .rq-result-item{border-top:1px solid #f5f5f5}
+.rq-chips{display:flex;flex-wrap:wrap;gap:5px;margin-bottom:8px;min-height:16px}
+.rq-chip{background:#fff3e0;color:#e65100;border:none;border-radius:16px;padding:4px 10px;font-size:0.78rem;display:flex;align-items:center;gap:4px}
+.rq-chip-x{background:none;border:none;color:#aaa;cursor:pointer;font-size:0.88rem;padding:0;line-height:1}
+.rq-chip-x:hover{color:#e53935}
+.rq-hint{font-size:0.74rem;color:#aaa;margin-top:8px;line-height:1.6}
+.fav-item{display:flex;align-items:center;gap:7px;padding:7px 0;border-bottom:1px solid #f5f5f5;font-size:0.84rem}
+.fav-item:last-child{border-bottom:none}
+.fav-item-name{flex:1;color:#333}
+.fav-item-meta{font-size:0.72rem;color:#bbb;white-space:nowrap}
+.fav-remove{background:none;border:none;color:#ccc;cursor:pointer;font-size:0.9rem;padding:2px 5px;border-radius:5px}
+.fav-remove:hover{color:#e53935}
+.fav-empty{font-size:0.81rem;color:#bbb;text-align:center;padding:14px 0}
+.fav-badge-label{font-size:0.68rem;font-weight:bold;padding:2px 5px;border-radius:4px;margin-left:5px;vertical-align:middle}
 .img-popup-overlay{display:none;position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,0.72);z-index:200;align-items:center;justify-content:center}
 .img-popup-overlay.open{display:flex}
 .img-popup{background:white;border-radius:16px;padding:22px 20px 18px;max-width:340px;width:90%;text-align:center;position:relative}
@@ -267,6 +299,7 @@ header p{font-size:0.9rem;opacity:0.85}
       </table>
     </div>
     <button class="btn-generate" onclick="generate()">🍽️ 献立を考える</button>
+    <button class="btn-req-open" onclick="openReqModal()">⭐ お気に入り・今週のリクエスト</button>
     <button class="btn-product-mgr" onclick="openProductManager()">🗂️ 近くのお店にない商品・不要な商品を除外する</button>
   </div>
 
@@ -315,6 +348,36 @@ header p{font-size:0.9rem;opacity:0.85}
     <div class="modal-sec">作り方</div>
     <ol class="recipe-steps" id="mRecipe"></ol>
     <div id="mSides"></div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="reqModal" onclick="closeReqModalOverlay(event)">
+  <div class="modal rq-modal">
+    <button class="modal-close" onclick="closeReqModal()">✕</button>
+    <div class="modal-title" style="margin-bottom:10px">⭐ お気に入り・リクエスト</div>
+    <div class="rq-tabs">
+      <button class="rq-tab active" id="rqTab1" onclick="switchRqTab(1)">今週のリクエスト</button>
+      <button class="rq-tab" id="rqTab2" onclick="switchRqTab(2)">お気に入り管理</button>
+    </div>
+    <div id="rqPane1">
+      <div class="rq-stitle">🍽️ 今週使いたい献立</div>
+      <input class="rq-search" id="rqMealSearch" type="text" placeholder="メニュー名を入力..." oninput="filterRqMeals()">
+      <div class="rq-results" id="rqMealResults"></div>
+      <div class="rq-chips" id="rqMealChips"></div>
+      <div class="rq-stitle">🛒 今週必ず買いたい商品</div>
+      <input class="rq-search" id="rqProdSearch" type="text" placeholder="商品名を入力..." oninput="filterRqProds()">
+      <div class="rq-results" id="rqProdResults"></div>
+      <div class="rq-chips" id="rqProdChips"></div>
+      <p class="rq-hint">リクエストした献立は「献立を考える」を押した時に優先して組み込まれます。商品はリストに追加されます。<br>リクエストはその週の生成後にリセットされます。</p>
+    </div>
+    <div id="rqPane2" style="display:none">
+      <div class="rq-stitle">⭐ お気に入り献立 <span id="favMealCountBadge" style="color:#aaa;font-weight:normal"></span></div>
+      <div id="favMealList"></div>
+      <div class="rq-stitle" style="margin-top:14px">⭐ お気に入り商品 <span id="favProdCountBadge" style="color:#aaa;font-weight:normal"></span></div>
+      <div id="favProdList"></div>
+      <p class="rq-hint">献立カードの ☆ でお気に入り登録。最後に登場してから28日以上経つと次の生成に自動で組み込まれます。🔄 で変えた・✕ で削除した場合は今週はスキップ（お気に入りは残ります）。</p>
+    </div>
+    <button class="pm-close-btn" style="width:100%;margin-top:12px" onclick="closeReqModal()">閉じる</button>
   </div>
 </div>
 
@@ -766,6 +829,17 @@ let currentPlan = [];
 let productImages = {}; // id → image_url
 let pmActiveCategory = 'すべて';
 
+// お気に入り・リクエスト
+let favoriteMeals    = new Set(JSON.parse(localStorage.getItem('favoriteMeals')    || '[]'));
+let favoriteProducts = new Set(JSON.parse(localStorage.getItem('favoriteProducts') || '[]'));
+let mealLastShown    = JSON.parse(localStorage.getItem('mealLastShown')    || '{}'); // name→'YYYY-MM-DD'
+let productLastShown = JSON.parse(localStorage.getItem('productLastShown') || '{}'); // id→'YYYY-MM-DD'
+let skippedMealsThisGen    = new Set(); // 今回🔄で変えたお気に入り献立
+let skippedProductsThisGen = new Set(); // 今回✕で消したお気に入り商品
+let requestedMealNames  = []; // 今週リクエストされた献立名
+let requestedProductIds = []; // 今週リクエストされた商品ID
+let rqActiveTab = 1;
+
 async function loadProductData() {
   try {
     const res = await fetch('./products_data.json?_=' + Date.now());
@@ -992,9 +1066,9 @@ function openModal(meal, sides) {
 
 function removeShoppingItem(btn) {
   const item = btn.closest('.shopping-item');
-  const cost = parseFloat(item.dataset.cost) || 0;
+  const id = item.dataset.productId;
+  if (id && favoriteProducts.has(id)) skippedProductsThisGen.add(id);
   item.remove();
-  // 合計金額を再計算
   let total = 0;
   document.querySelectorAll('#shoppingList .shopping-item').forEach(el => {
     total += parseFloat(el.dataset.cost) || 0;
@@ -1020,6 +1094,139 @@ function showProductImage(id) {
 }
 function closeImgPopup() {
   document.getElementById('imgPopup').classList.remove('open');
+}
+
+// ---- お気に入り・リクエスト ----
+function openReqModal() {
+  renderRqMeals(); renderRqProds();
+  renderFavMeals(); renderFavProds();
+  document.getElementById('reqModal').classList.add('open');
+}
+function closeReqModal() { document.getElementById('reqModal').classList.remove('open'); }
+function closeReqModalOverlay(e) { if (e.target === document.getElementById('reqModal')) closeReqModal(); }
+function switchRqTab(n) {
+  rqActiveTab = n;
+  document.getElementById('rqPane1').style.display = n === 1 ? '' : 'none';
+  document.getElementById('rqPane2').style.display = n === 2 ? '' : 'none';
+  document.getElementById('rqTab1').classList.toggle('active', n === 1);
+  document.getElementById('rqTab2').classList.toggle('active', n === 2);
+  if (n === 2) { renderFavMeals(); renderFavProds(); }
+}
+
+function filterRqMeals() {
+  const q = (document.getElementById('rqMealSearch').value || '').trim().toLowerCase();
+  const el = document.getElementById('rqMealResults');
+  if (!q) { el.innerHTML = ''; return; }
+  const seen = new Set();
+  const results = [...dinners, ...lunchMeals, ...breakfastMeals].filter(m => {
+    if (seen.has(m.name)) return false;
+    seen.add(m.name);
+    return m.name.includes(q) || (m.desc||'').includes(q);
+  }).slice(0, 8);
+  el.innerHTML = results.length === 0
+    ? '<div style="padding:10px;text-align:center;color:#aaa;font-size:0.82rem">見つかりません</div>'
+    : results.map(m => '<div class="rq-result-item" onclick="addMealRequest(\'' + m.name.replace(/'/g,"\\'") + '\')">' + m.icon + ' ' + m.name + '</div>').join('');
+}
+
+function filterRqProds() {
+  const q = (document.getElementById('rqProdSearch').value || '').trim().toLowerCase();
+  const el = document.getElementById('rqProdResults');
+  if (!q) { el.innerHTML = ''; return; }
+  const src = productCatalog.length > 0 ? productCatalog
+    : Object.entries(products).map(([id,p]) => ({id, name:p.name, amount:p.amount}));
+  const results = src.filter(p => p.name.toLowerCase().includes(q)).slice(0, 8);
+  el.innerHTML = results.length === 0
+    ? '<div style="padding:10px;text-align:center;color:#aaa;font-size:0.82rem">見つかりません</div>'
+    : results.map(p => '<div class="rq-result-item" onclick="addProdRequest(\'' + p.id + '\')">🛒 ' + p.name + '<span style="color:#aaa;font-size:0.74rem;margin-left:5px">' + (p.amount||'') + '</span></div>').join('');
+}
+
+function addMealRequest(name) {
+  if (!requestedMealNames.includes(name)) requestedMealNames.push(name);
+  document.getElementById('rqMealSearch').value = '';
+  document.getElementById('rqMealResults').innerHTML = '';
+  renderRqMeals();
+}
+function removeMealRequest(name) { requestedMealNames = requestedMealNames.filter(n => n !== name); renderRqMeals(); }
+function addProdRequest(id) {
+  if (!requestedProductIds.includes(id)) requestedProductIds.push(id);
+  document.getElementById('rqProdSearch').value = '';
+  document.getElementById('rqProdResults').innerHTML = '';
+  renderRqProds();
+}
+function removeProdRequest(id) { requestedProductIds = requestedProductIds.filter(i => i !== id); renderRqProds(); }
+
+function renderRqMeals() {
+  document.getElementById('rqMealChips').innerHTML = requestedMealNames.map(n =>
+    '<span class="rq-chip">' + n + '<button class="rq-chip-x" onclick="removeMealRequest(\'' + n.replace(/'/g,"\\'") + '\')">✕</button></span>'
+  ).join('');
+}
+function renderRqProds() {
+  document.getElementById('rqProdChips').innerHTML = requestedProductIds.map(id => {
+    const p = products[id];
+    return '<span class="rq-chip">' + (p ? p.name : id) + '<button class="rq-chip-x" onclick="removeProdRequest(\'' + id + '\')">✕</button></span>';
+  }).join('');
+}
+
+function toggleFavMeal(name, event) {
+  event && event.stopPropagation();
+  if (favoriteMeals.has(name)) favoriteMeals.delete(name); else favoriteMeals.add(name);
+  localStorage.setItem('favoriteMeals', JSON.stringify([...favoriteMeals]));
+  document.querySelectorAll('.btn-fav-meal[data-meal]').forEach(btn => {
+    if (btn.dataset.meal === name) {
+      const on = favoriteMeals.has(name);
+      btn.textContent = on ? '⭐' : '☆';
+      btn.classList.toggle('fav', on);
+      btn.title = on ? 'お気に入り済み（タップで解除）' : 'お気に入りに追加';
+    }
+  });
+}
+
+function toggleFavProd(id, event) {
+  event && event.stopPropagation();
+  if (favoriteProducts.has(id)) favoriteProducts.delete(id); else favoriteProducts.add(id);
+  localStorage.setItem('favoriteProducts', JSON.stringify([...favoriteProducts]));
+  const btn = event && event.currentTarget;
+  if (btn) {
+    const on = favoriteProducts.has(id);
+    btn.textContent = on ? '⭐' : '☆';
+    btn.classList.toggle('fav', on);
+    btn.title = on ? 'お気に入り済み（タップで解除）' : 'お気に入りに追加';
+  }
+}
+
+function renderFavMeals() {
+  const el = document.getElementById('favMealList');
+  const badge = document.getElementById('favMealCountBadge');
+  const arr = [...favoriteMeals];
+  if (badge) badge.textContent = arr.length > 0 ? arr.length + '件' : '';
+  if (!el) return;
+  if (arr.length === 0) { el.innerHTML = '<div class="fav-empty">献立カードの ☆ でお気に入り登録できます</div>'; return; }
+  const today = new Date();
+  el.innerHTML = arr.map(name => {
+    const last = mealLastShown[name];
+    let meta = last ? last + '（' + Math.round((today - new Date(last)) / 86400000) + '日前）' : '未表示';
+    return '<div class="fav-item"><div class="fav-item-name">⭐ ' + name + '</div>' +
+      '<div class="fav-item-meta">' + meta + '</div>' +
+      '<button class="fav-remove" onclick="toggleFavMeal(\'' + name.replace(/'/g,"\\'") + '\', event)" title="解除">✕</button></div>';
+  }).join('');
+}
+
+function renderFavProds() {
+  const el = document.getElementById('favProdList');
+  const badge = document.getElementById('favProdCountBadge');
+  const arr = [...favoriteProducts];
+  if (badge) badge.textContent = arr.length > 0 ? arr.length + '件' : '';
+  if (!el) return;
+  if (arr.length === 0) { el.innerHTML = '<div class="fav-empty">買い物リストの ☆ でお気に入り登録できます</div>'; return; }
+  const today = new Date();
+  el.innerHTML = arr.map(id => {
+    const prod = products[id]; if (!prod) return '';
+    const last = productLastShown[id];
+    let meta = last ? last + '（' + Math.round((today - new Date(last)) / 86400000) + '日前）' : '未表示';
+    return '<div class="fav-item"><div class="fav-item-name">⭐ ' + prod.name + '</div>' +
+      '<div class="fav-item-meta">' + meta + '</div>' +
+      '<button class="fav-remove" onclick="toggleFavProd(\'' + id + '\', event)" title="解除">✕</button></div>';
+  }).join('');
 }
 
 function isBlocked(meal) {
@@ -1048,10 +1255,15 @@ function buildMealCardEl(dayIdx, mealIdx) {
   const thumbHtml = meal.image_url
     ? '<img class="meal-thumb" src="' + meal.image_url + '" alt="' + meal.name + '" onerror="this.style.display=\'none\'">'
     : '';
+  const isFav = favoriteMeals.has(meal.name);
+  const safeName = meal.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
   card.innerHTML =
     '<div class="meal-card-header">' +
       '<div class="type-label">' + slot.label + '</div>' +
-      '<button class="btn-change-meal" onclick="changeMeal(' + dayIdx + ',' + mealIdx + ',event)" title="別のメニューに変える">🔄</button>' +
+      '<div style="display:flex;gap:2px">' +
+        '<button class="btn-fav-meal' + (isFav ? ' fav' : '') + '" data-meal="' + safeName + '" onclick="toggleFavMeal(\'' + safeName + '\',event)" title="' + (isFav ? 'お気に入り済み' : 'お気に入りに追加') + '">' + (isFav ? '⭐' : '☆') + '</button>' +
+        '<button class="btn-change-meal" onclick="changeMeal(' + dayIdx + ',' + mealIdx + ',event)" title="別のメニューに変える">🔄</button>' +
+      '</div>' +
     '</div>' +
     thumbHtml +
     '<div class="meal-icon">' + meal.icon + '</div>' +
@@ -1066,9 +1278,11 @@ function buildMealCardEl(dayIdx, mealIdx) {
 function changeMeal(dayIdx, mealIdx, event) {
   event.stopPropagation();
   const slot = currentPlan[dayIdx].slots[mealIdx];
+  if (favoriteMeals.has(slot.meal.name)) skippedMealsThisGen.add(slot.meal.name);
   const pool = getPool(slot.type);
-  const others = pool.filter(m => m.name !== slot.meal.name);
-  slot.meal = (others.length > 0 ? others : pool)[Math.floor(Math.random() * (others.length || pool.length))];
+  const others = pool.filter(m => m.name !== slot.meal.name && !skippedMealsThisGen.has(m.name));
+  const finalPool = others.length > 0 ? others : pool.filter(m => m.name !== slot.meal.name);
+  slot.meal = (finalPool.length > 0 ? finalPool : pool)[Math.floor(Math.random() * Math.max(1, finalPool.length))];
   if (slot.isDinner) slot.sides = [...sideDishes].sort(() => Math.random() - 0.5).slice(0, 2);
   const old = document.getElementById('meal-' + dayIdx + '-' + mealIdx);
   if (old) old.replaceWith(buildMealCardEl(dayIdx, mealIdx));
@@ -1157,16 +1371,52 @@ function rebuildShopping() {
       const item = document.createElement('div');
       item.className = 'shopping-item';
       item.dataset.cost = cost;
+      item.dataset.productId = id;
       const usageText = formatUsage(consumed, prod.amount);
       const hasImg = !!productImages[id];
       const nameClass = 'item-name' + (hasImg ? ' has-img' : '');
       const nameOnclick = hasImg ? ' onclick="showProductImage(\'' + id + '\')" title="画像を見る"' : '';
+      const isFavProd = favoriteProducts.has(id);
       item.innerHTML =
         '<div class="item-left"><div class="' + nameClass + '"' + nameOnclick + '>' + prod.name + saleBadge + '</div><div class="item-detail">' + prod.amount + '</div><div class="item-usage">使用量: 約' + usageText + '</div></div>' +
         '<div class="item-right"><div class="item-qty">' + packs + '個</div><div class="item-price">' + priceHtml + ' × ' + packs + '</div></div>' +
+        '<button class="btn-fav-prod' + (isFavProd ? ' fav' : '') + '" onclick="toggleFavProd(\'' + id + '\',event)" title="' + (isFavProd ? 'お気に入り済み' : 'お気に入りに追加') + '">' + (isFavProd ? '⭐' : '☆') + '</button>' +
         '<button class="item-delete" onclick="removeShoppingItem(this)" title="今回は不要">✕</button>';
       listEl.appendChild(item);
     });
+
+  // お気に入り商品（期限切れ）とリクエスト商品を追加
+  const shownIds = new Set(Object.keys(consumption).filter(id => products[id]));
+  const extraIds = new Set();
+  for (const id of favoriteProducts) {
+    if (shownIds.has(id) || skippedProductsThisGen.has(id) || hiddenProductIds.has(id)) continue;
+    const last = productLastShown[id];
+    if (!last || (new Date() - new Date(last)) / 86400000 >= 28) extraIds.add(id);
+  }
+  for (const id of requestedProductIds) {
+    if (!shownIds.has(id) && !hiddenProductIds.has(id) && products[id]) extraIds.add(id);
+  }
+  for (const id of extraIds) {
+    const prod = products[id];
+    if (!prod) continue;
+    const isFavProd = favoriteProducts.has(id);
+    const isReq = requestedProductIds.includes(id);
+    const badge = isReq ? '<span class="sale-badge" style="background:#8b5cf6">リクエスト</span>' : '<span class="sale-badge" style="background:#f5a623">⭐お気に入り</span>';
+    const hasImg = !!productImages[id];
+    const nameClass = 'item-name' + (hasImg ? ' has-img' : '');
+    const nameOnclick = hasImg ? ' onclick="showProductImage(\'' + id + '\')" title="画像を見る"' : '';
+    const item = document.createElement('div');
+    item.className = 'shopping-item';
+    item.dataset.cost = 0;
+    item.dataset.productId = id;
+    item.innerHTML =
+      '<div class="item-left"><div class="' + nameClass + '"' + nameOnclick + '>' + prod.name + badge + '</div><div class="item-detail">' + prod.amount + '</div></div>' +
+      '<div class="item-right"><div class="item-price">¥' + prod.price.toLocaleString() + '</div></div>' +
+      '<button class="btn-fav-prod' + (isFavProd ? ' fav' : '') + '" onclick="toggleFavProd(\'' + id + '\',event)" title="' + (isFavProd ? 'お気に入り済み' : 'お気に入りに追加') + '">' + (isFavProd ? '⭐' : '☆') + '</button>' +
+      '<button class="item-delete" onclick="removeShoppingItem(this)" title="今回は不要">✕</button>';
+    listEl.appendChild(item);
+  }
+
   document.getElementById('totalAmount').textContent = '¥' + total.toLocaleString();
   document.getElementById('totalBreakdown').textContent =
     totalDays + '日分 ／ 1日あたり約 ¥' + Math.round(total / totalDays).toLocaleString()
@@ -1187,6 +1437,9 @@ function generate() {
     if (hasB || hasL || hasD) activeDays.push({label:dayNames[i], hasB, hasL, hasD, effectivePersons});
   }
   if (activeDays.length === 0) { alert('食事を1つ以上チェックしてください'); return; }
+
+  skippedMealsThisGen.clear();
+  skippedProductsThisGen.clear();
 
   currentPlan = [];
   let officialUsed = false;
@@ -1211,6 +1464,47 @@ function generate() {
     });
     currentPlan.push({label:day.label, effectivePersons:day.effectivePersons, slots});
   }
+
+  // お気に入り（28日以上未出現）とリクエスト献立を優先注入
+  const today = new Date().toISOString().slice(0,10);
+  const overdueFavMeals = [...favoriteMeals].filter(name => {
+    if (skippedMealsThisGen.has(name)) return false;
+    const last = mealLastShown[name];
+    return !last || (new Date() - new Date(last)) / 86400000 >= 28;
+  });
+  const mustInclude = [...new Set([...requestedMealNames, ...overdueFavMeals])];
+  const allMealObjects = [...dinners, ...lunchMeals, ...breakfastMeals, ...fetchedRecipes];
+  const mealByName = {};
+  allMealObjects.forEach(m => { if (!mealByName[m.name]) mealByName[m.name] = m; });
+  for (const mealName of mustInclude) {
+    if (currentPlan.some(d => d.slots.some(s => s.meal.name === mealName))) continue;
+    const mealObj = mealByName[mealName];
+    if (!mealObj) continue;
+    const replSlots = [];
+    for (let di = 0; di < currentPlan.length; di++) {
+      for (let mi = 0; mi < currentPlan[di].slots.length; mi++) {
+        const slot = currentPlan[di].slots[mi];
+        const isProtected = favoriteMeals.has(slot.meal.name) || requestedMealNames.includes(slot.meal.name);
+        if (!isProtected) replSlots.push({di, mi, pref: slot.type === 'dinner' ? 0 : 1});
+      }
+    }
+    replSlots.sort((a, b) => a.pref - b.pref);
+    if (replSlots.length > 0) {
+      const {di, mi} = replSlots[0];
+      currentPlan[di].slots[mi].meal = mealObj;
+      if (currentPlan[di].slots[mi].isDinner)
+        currentPlan[di].slots[mi].sides = [...sideDishes].sort(() => Math.random() - 0.5).slice(0, 2);
+    }
+  }
+
+  // mealLastShown を更新
+  for (const day of currentPlan)
+    for (const slot of day.slots) mealLastShown[slot.meal.name] = today;
+  localStorage.setItem('mealLastShown', JSON.stringify(mealLastShown));
+
+  // リクエストをクリア
+  requestedMealNames = [];
+  requestedProductIds = [];
 
   const content = document.getElementById('mealContent');
   content.innerHTML = '';
