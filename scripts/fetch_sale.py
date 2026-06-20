@@ -4,6 +4,7 @@ import json
 import re
 import io
 from datetime import datetime
+from urllib.parse import urljoin
 from PIL import Image
 import pytesseract
 
@@ -70,19 +71,17 @@ def parse_ocr_text(text):
 
     return items
 
-def get_image_urls(soup):
-    """ページ内の画像URLを取得"""
+def get_image_urls(soup, page_url):
+    """ページ内のチラシ画像URLを取得（相対パスを正しく解決）"""
     urls = []
     for img in soup.find_all('img'):
         src = img.get('src') or img.get('data-src') or ''
         if not src:
             continue
-        if src.startswith('//'):
-            src = 'https:' + src
-        elif src.startswith('/'):
-            src = BASE + src
-        if re.search(r'\.(jpg|jpeg|png)(\?|$)', src, re.I):
-            urls.append(src)
+        absolute = urljoin(page_url, src)
+        # チラシ画像のみ対象（bargain_ を含むもの）
+        if 'bargain_' in absolute and re.search(r'\.(jpg|jpeg|png)', absolute, re.I):
+            urls.append(absolute)
     return urls
 
 def ocr_image(session, img_url):
@@ -121,7 +120,8 @@ def fetch():
         resp.raise_for_status()
         soup = BeautifulSoup(resp.text, 'html.parser')
 
-        image_urls = get_image_urls(soup)
+        page_url = f'{BASE}/bargain/'
+        image_urls = get_image_urls(soup, page_url)
         print(f'画像URL発見: {len(image_urls)}件')
         for u in image_urls:
             print(f'  {u}')
