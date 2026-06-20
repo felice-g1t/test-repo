@@ -46,6 +46,9 @@ header p{font-size:0.9rem;opacity:0.85}
 .meal-card .meal-desc{font-size:0.72rem;color:#888;line-height:1.45}
 .meal-card .side-info{font-size:0.7rem;color:#b08000;margin-top:4px}
 .meal-card .recipe-hint{font-size:0.65rem;color:#bbb;margin-top:5px}
+.meal-card-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:2px}
+.btn-change-meal{background:none;border:none;font-size:0.88rem;cursor:pointer;padding:2px 5px;border-radius:5px;color:#ccc;transition:color 0.15s,background 0.15s;line-height:1;flex-shrink:0}
+.btn-change-meal:hover{color:#2d7a3a;background:#e8f5e9}
 .meal-card.official{background:#faf0ff;border-color:#ce93d8}
 .official-badge{background:#7b1fa2;color:white;font-size:0.66rem;font-weight:bold;padding:2px 6px;border-radius:4px;margin-left:5px;vertical-align:middle}
 .recipe-link{display:inline-block;margin-top:6px;font-size:0.72rem;color:#7b1fa2;text-decoration:none;border-bottom:1px dashed #ce93d8}
@@ -585,6 +588,7 @@ let salePrices = {};
 let fetchedRecipes = [];
 let productCatalog = []; // products_data.json から読み込んだ全商品
 let hiddenProductIds = new Set(JSON.parse(localStorage.getItem('hiddenProducts') || '[]'));
+let currentPlan = [];
 let pmActiveCategory = 'すべて';
 
 async function loadProductData() {
@@ -795,9 +799,98 @@ function closeModalOverlay(e) {
 }
 
 function isBlocked(meal) {
-  // 主要食材（米・パスタ・うどん以外）が非表示なら献立から除外
   const staples = new Set(['rice','pasta','udon','bread']);
   return Object.keys(meal.ingredients).some(id => !staples.has(id) && hiddenProductIds.has(id));
+}
+
+function getPool(type) {
+  const full = type === 'dinner' ? dinners : type === 'lunch' ? lunchMeals : breakfastMeals;
+  const av = full.filter(m => !isBlocked(m));
+  return av.length > 0 ? av : full;
+}
+
+function buildMealCardEl(dayIdx, mealIdx) {
+  const day  = currentPlan[dayIdx];
+  const slot = day.slots[mealIdx];
+  const meal = slot.meal;
+  const sides = slot.sides || [];
+  const card = document.createElement('div');
+  card.className = 'meal-card' + (meal.isOfficial ? ' official' : '');
+  card.id = 'meal-' + dayIdx + '-' + mealIdx;
+  const badge = meal.isOfficial ? '<span class="official-badge">業スー公式</span>' : '';
+  const recipeLink = meal.isOfficial && meal.url
+    ? '<a class="recipe-link" href="' + meal.url + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">公式レシピを見る ↗</a>'
+    : '<div class="recipe-hint">タップでレシピを見る</div>';
+  card.innerHTML =
+    '<div class="meal-card-header">' +
+      '<div class="type-label">' + slot.label + '</div>' +
+      '<button class="btn-change-meal" onclick="changeMeal(' + dayIdx + ',' + mealIdx + ',event)" title="別のメニューに変える">🔄</button>' +
+    '</div>' +
+    '<div class="meal-icon">' + meal.icon + '</div>' +
+    '<div class="meal-name">' + meal.name + badge + '</div>' +
+    '<div class="meal-desc">' + meal.desc + '</div>' +
+    (sides.length > 0 ? '<div class="side-info">副菜: ' + sides.map(s => s.name).join('・') + '</div>' : '') +
+    recipeLink;
+  card.onclick = () => openModal(meal, sides);
+  return card;
+}
+
+function changeMeal(dayIdx, mealIdx, event) {
+  event.stopPropagation();
+  const slot = currentPlan[dayIdx].slots[mealIdx];
+  const pool = getPool(slot.type);
+  const others = pool.filter(m => m.name !== slot.meal.name);
+  slot.meal = (others.length > 0 ? others : pool)[Math.floor(Math.random() * (others.length || pool.length))];
+  if (slot.isDinner) slot.sides = [...sideDishes].sort(() => Math.random() - 0.5).slice(0, 2);
+  const old = document.getElementById('meal-' + dayIdx + '-' + mealIdx);
+  if (old) old.replaceWith(buildMealCardEl(dayIdx, mealIdx));
+  rebuildShopping();
+}
+
+function rebuildShopping() {
+  const consumption = {};
+  for (const day of currentPlan) {
+    const pf = (day.effectivePersons > 0 ? day.effectivePersons : 1) / 2;
+    for (const slot of day.slots) {
+      for (const [id, fr] of Object.entries(slot.meal.ingredients))
+        consumption[id] = (consumption[id] || 0) + fr * pf;
+      for (const sd of (slot.sides || []))
+        for (const [id, fr] of Object.entries(sd.ingredients))
+          consumption[id] = (consumption[id] || 0) + fr * pf;
+    }
+  }
+  const listEl = document.getElementById('shoppingList');
+  listEl.innerHTML = '';
+  let total = 0;
+  const totalDays = currentPlan.length;
+  const totalEffective = currentPlan.reduce((s, d) => s + d.effectivePersons, 0);
+  Object.entries(consumption)
+    .filter(([id, v]) => products[id] && v > 0 && !hiddenProductIds.has(id))
+    .sort(([ai, av], [bi, bv]) => Math.ceil(bv) * products[bi].price - Math.ceil(av) * products[ai].price)
+    .forEach(([id, consumed]) => {
+      const prod = products[id];
+      const packs = Math.ceil(consumed);
+      const unitPrice = salePrices[id] ?? prod.price;
+      const onSale = salePrices[id] !== undefined;
+      const cost = packs * unitPrice;
+      total += cost;
+      const priceHtml = onSale
+        ? '<span class="price-normal-strike">¥' + prod.price.toLocaleString() + '</span><span class="price-sale">¥' + unitPrice.toLocaleString() + '</span>'
+        : '¥' + unitPrice.toLocaleString();
+      const saleBadge = onSale ? '<span class="sale-badge">SALE</span>' : '';
+      const item = document.createElement('div');
+      item.className = 'shopping-item';
+      item.dataset.cost = cost;
+      item.innerHTML =
+        '<div class="item-left"><div class="item-name">' + prod.name + saleBadge + '</div><div class="item-detail">' + prod.amount + '</div></div>' +
+        '<div class="item-right"><div class="item-qty">' + packs + '個</div><div class="item-price">' + priceHtml + ' × ' + packs + '</div></div>' +
+        '<button class="item-delete" onclick="removeShoppingItem(this)" title="今回は不要">✕</button>';
+      listEl.appendChild(item);
+    });
+  document.getElementById('totalAmount').textContent = '¥' + total.toLocaleString();
+  document.getElementById('totalBreakdown').textContent =
+    totalDays + '日分 ／ 1日あたり約 ¥' + Math.round(total / totalDays).toLocaleString()
+    + (totalEffective > 0 ? ' ／ 1人あたり約 ¥' + Math.round(total / totalEffective).toLocaleString() : '');
 }
 
 function generate() {
@@ -815,102 +908,45 @@ function generate() {
   }
   if (activeDays.length === 0) { alert('食事を1つ以上チェックしてください'); return; }
 
-  const content = document.getElementById('mealContent');
-  content.innerHTML = '';
-  const consumption = {};
+  currentPlan = [];
   let officialUsed = false;
 
-  for (const day of activeDays) {
-    const pf = (day.effectivePersons > 0 ? day.effectivePersons : 1) / 2;
+  for (let di = 0; di < activeDays.length; di++) {
+    const day = activeDays[di];
+    const slotDefs = [];
+    if (day.hasB) slotDefs.push({label:'朝食', type:'breakfast', isDinner:false});
+    if (day.hasL) slotDefs.push({label:'昼食', type:'lunch',     isDinner:false});
+    if (day.hasD) slotDefs.push({label:'夕食', type:'dinner',    isDinner:true });
+    const slots = slotDefs.map(sd => {
+      const pool = getPool(sd.type);
+      let meal;
+      if (sd.isDinner && !officialUsed && fetchedRecipes.length > 0) {
+        meal = fetchedRecipes[Math.floor(Math.random() * fetchedRecipes.length)];
+        officialUsed = true;
+      } else {
+        meal = pickRandom(pool, 1)[0];
+      }
+      const sides = sd.isDinner ? [...sideDishes].sort(() => Math.random() - 0.5).slice(0, 2) : [];
+      return {label:sd.label, type:sd.type, isDinner:sd.isDinner, meal, sides};
+    });
+    currentPlan.push({label:day.label, effectivePersons:day.effectivePersons, slots});
+  }
+
+  const content = document.getElementById('mealContent');
+  content.innerHTML = '';
+  for (let di = 0; di < currentPlan.length; di++) {
+    const day = currentPlan[di];
     const dayCard = document.createElement('div');
     dayCard.className = 'day-card';
     dayCard.innerHTML = '<div class="day-card-title">' + day.label + '曜日</div>';
     const mealsRow = document.createElement('div');
     mealsRow.className = 'day-card-meals';
-
-    const avDinners    = dinners.filter(m => !isBlocked(m));
-    const avLunches    = lunchMeals.filter(m => !isBlocked(m));
-    const avBreakfasts = breakfastMeals.filter(m => !isBlocked(m));
-    const slots = [];
-    if (day.hasB) slots.push({label:'朝食', pool:avBreakfasts.length ? avBreakfasts : breakfastMeals, isDinner:false});
-    if (day.hasL) slots.push({label:'昼食', pool:avLunches.length    ? avLunches    : lunchMeals,     isDinner:false});
-    if (day.hasD) slots.push({label:'夕食', pool:avDinners.length    ? avDinners    : dinners,        isDinner:true });
-
-    for (const slot of slots) {
-      let meal;
-      if (slot.isDinner && !officialUsed && fetchedRecipes.length > 0) {
-        meal = fetchedRecipes[Math.floor(Math.random() * fetchedRecipes.length)];
-        officialUsed = true;
-      } else {
-        meal = pickRandom(slot.pool, 1)[0];
-      }
-      let sides = [];
-      if (slot.isDinner) {
-        sides = [...sideDishes].sort(() => Math.random() - 0.5).slice(0, 2);
-      }
-      for (const [id, fr] of Object.entries(meal.ingredients)) {
-        consumption[id] = (consumption[id] || 0) + fr * pf;
-      }
-      for (const sd of sides) {
-        for (const [id, fr] of Object.entries(sd.ingredients)) {
-          consumption[id] = (consumption[id] || 0) + fr * pf;
-        }
-      }
-      const card = document.createElement('div');
-      card.className = 'meal-card' + (meal.isOfficial ? ' official' : '');
-      const officialBadge = meal.isOfficial ? '<span class="official-badge">業スー公式</span>' : '';
-      const recipeLink = meal.isOfficial && meal.url
-        ? '<a class="recipe-link" href="' + meal.url + '" target="_blank" rel="noopener" onclick="event.stopPropagation()">公式レシピを見る ↗</a>'
-        : '<div class="recipe-hint">タップでレシピを見る</div>';
-      card.innerHTML =
-        '<div class="type-label">' + slot.label + '</div>' +
-        '<div class="meal-icon">' + meal.icon + '</div>' +
-        '<div class="meal-name">' + meal.name + officialBadge + '</div>' +
-        '<div class="meal-desc">' + meal.desc + '</div>' +
-        (sides.length > 0 ? '<div class="side-info">副菜: ' + sides.map(s => s.name).join('・') + '</div>' : '') +
-        recipeLink;
-      card.onclick = () => openModal(meal, sides);
-      mealsRow.appendChild(card);
-    }
+    for (let mi = 0; mi < day.slots.length; mi++) mealsRow.appendChild(buildMealCardEl(di, mi));
     dayCard.appendChild(mealsRow);
     content.appendChild(dayCard);
   }
 
-  const listEl = document.getElementById('shoppingList');
-  listEl.innerHTML = '';
-  let total = 0;
-  const totalDays = activeDays.length;
-  const totalEffective = activeDays.reduce((s, d) => s + d.effectivePersons, 0);
-
-  Object.entries(consumption)
-    .filter(([id, consumed]) => products[id] && consumed > 0 && !hiddenProductIds.has(id))
-    .sort(([ai, av], [bi, bv]) => Math.ceil(bv) * products[bi].price - Math.ceil(av) * products[ai].price)
-    .forEach(([id, consumed]) => {
-      const prod = products[id];
-      const packs = Math.ceil(consumed);
-      const unitPrice = salePrices[id] ?? prod.price;
-      const isOnSale = salePrices[id] !== undefined;
-      const cost = packs * unitPrice;
-      total += cost;
-      const priceHtml = isOnSale
-        ? '<span class="price-normal-strike">¥' + prod.price.toLocaleString() + '</span><span class="price-sale">¥' + unitPrice.toLocaleString() + '</span>'
-        : '¥' + unitPrice.toLocaleString();
-      const badge = isOnSale ? '<span class="sale-badge">SALE</span>' : '';
-      const item = document.createElement('div');
-      item.className = 'shopping-item';
-      item.dataset.cost = cost;
-      item.innerHTML =
-        '<div class="item-left"><div class="item-name">' + prod.name + badge + '</div><div class="item-detail">' + prod.amount + '</div></div>' +
-        '<div class="item-right"><div class="item-qty">' + packs + '個</div><div class="item-price">' + priceHtml + ' × ' + packs + '</div></div>' +
-        '<button class="item-delete" onclick="removeShoppingItem(this)" title="今回は不要">✕</button>';
-      listEl.appendChild(item);
-    });
-
-  document.getElementById('totalAmount').textContent = '¥' + total.toLocaleString();
-  const avgEffective = totalEffective / totalDays;
-  document.getElementById('totalBreakdown').textContent =
-    totalDays + '日分 ／ 1日あたり約 ¥' + Math.round(total / totalDays).toLocaleString()
-    + (totalEffective > 0 ? ' ／ 1人あたり約 ¥' + Math.round(total / totalEffective).toLocaleString() : '');
+  rebuildShopping();
 
   document.getElementById('mealSection').classList.add('visible');
   document.getElementById('shoppingSection').classList.add('visible');
