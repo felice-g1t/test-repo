@@ -208,6 +208,8 @@ header p{font-size:0.9rem;opacity:0.85}
 .undo-bar{font-size:0.8rem;color:#aaa;padding:8px 0 2px;text-align:center;display:none}
 .undo-bar.visible{display:block}
 .undo-link{color:#2d7a3a;cursor:pointer;font-weight:bold;text-decoration:underline;margin-left:5px}
+.all-days-row td{background:#e8f5e9;border-bottom:2px solid #a5d6a7}
+.all-days-row .day-name-cell{color:#2d7a3a;font-weight:bold;font-size:0.9rem;letter-spacing:0.5px}
 </style>
 </head>
 <body>
@@ -237,7 +239,7 @@ header p{font-size:0.9rem;opacity:0.85}
   <div class="controls">
     <h2>⚙️ 献立の設定</h2>
     <div class="week-grid-wrap">
-      <table class="week-grid">
+      <table class="week-grid" id="weekGrid">
         <thead>
           <tr>
             <th></th>
@@ -248,6 +250,17 @@ header p{font-size:0.9rem;opacity:0.85}
           </tr>
         </thead>
         <tbody>
+          <tr class="all-days-row">
+            <td class="day-name-cell">全</td>
+            <td class="meal-check"><input type="checkbox" id="allB" onchange="applyAllMeals('b',this)"></td>
+            <td class="meal-check"><input type="checkbox" id="allL" onchange="applyAllMeals('l',this)"></td>
+            <td class="meal-check"><input type="checkbox" id="allD" onchange="applyAllMeals('d',this)"></td>
+            <td class="persons-cell">
+              <div class="num-group"><span class="num-label">大人</span><input type="number" class="num-input" id="allA" min="0" max="9" placeholder="–" oninput="applyAllPersons('a',this)"></div>
+              <div class="num-group"><span class="num-label">小学</span><input type="number" class="num-input" id="allE" min="0" max="9" placeholder="–" oninput="applyAllPersons('e',this)"></div>
+              <div class="num-group"><span class="num-label">幼児</span><input type="number" class="num-input" id="allT" min="0" max="9" placeholder="–" oninput="applyAllPersons('t',this)"></div>
+            </td>
+          </tr>
           <tr>
             <td class="day-name-cell">月</td>
             <td class="meal-check"><input type="checkbox" id="d0b"></td>
@@ -887,6 +900,61 @@ let rqActiveTab = 1;
 let removedShoppingItems = [];
 let extraModalTarget = {dayIdx: -1, mealIdx: -1};
 
+// ---- 設定の一括適用 & 保存 ----
+function applyAllMeals(type, el) {
+  for (let i = 0; i < 7; i++) document.getElementById('d' + i + type).checked = el.checked;
+  syncAllRowState();
+  saveSettings();
+}
+function applyAllPersons(type, el) {
+  const v = el.value;
+  for (let i = 0; i < 7; i++) document.getElementById('d' + i + type).value = v;
+  saveSettings();
+}
+
+function syncAllRowState() {
+  ['b','l','d'].forEach(t => {
+    const states = Array.from({length:7}, (_,i) => document.getElementById('d'+i+t).checked);
+    const el = document.getElementById('all' + t.toUpperCase());
+    if (!el) return;
+    const allOn = states.every(v => v), allOff = states.every(v => !v);
+    el.checked = allOn;
+    el.indeterminate = !allOn && !allOff;
+  });
+}
+
+function saveSettings() {
+  const s = {};
+  for (let i = 0; i < 7; i++) {
+    s['d'+i] = {
+      b: document.getElementById('d'+i+'b').checked,
+      l: document.getElementById('d'+i+'l').checked,
+      d: document.getElementById('d'+i+'d').checked,
+      a: document.getElementById('d'+i+'a').value,
+      e: document.getElementById('d'+i+'e').value,
+      t: document.getElementById('d'+i+'t').value,
+    };
+  }
+  localStorage.setItem('weekSettings', JSON.stringify(s));
+}
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('weekSettings') || 'null');
+    if (!s) return;
+    for (let i = 0; i < 7; i++) {
+      const d = s['d'+i]; if (!d) continue;
+      document.getElementById('d'+i+'b').checked = !!d.b;
+      document.getElementById('d'+i+'l').checked = !!d.l;
+      document.getElementById('d'+i+'d').checked = !!d.d;
+      document.getElementById('d'+i+'a').value = d.a ?? 2;
+      document.getElementById('d'+i+'e').value = d.e ?? 0;
+      document.getElementById('d'+i+'t').value = d.t ?? 0;
+    }
+    syncAllRowState();
+  } catch(e) {}
+}
+
 async function loadProductData() {
   try {
     const res = await fetch('./products_data.json?_=' + Date.now());
@@ -1091,6 +1159,14 @@ async function loadSiteRecipes() {
   } catch(e) { /* recipe_sites_data.json がまだない場合はスキップ */ }
 }
 loadSiteRecipes();
+
+// 設定を復元して、変更時に自動保存
+loadSettings();
+const weekGrid = document.getElementById('weekGrid');
+if (weekGrid) {
+  weekGrid.addEventListener('change', e => { syncAllRowState(); saveSettings(); });
+  weekGrid.addEventListener('input',  () => saveSettings());
+}
 
 function pickRandom(arr, n) {
   const result = [], pool = [...arr];
