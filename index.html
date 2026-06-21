@@ -1130,26 +1130,38 @@ async function loadSaleData() {
 loadSaleData();
 
 async function loadRecipeData() {
+  const dessertKw = ['ようかん','アイス','ムース','プリン','ケーキ','スイーツ','デザート','バレンタイン','チョコ','お菓子'];
+  const skipKw    = ['カクテル','サジー','ピクニック','バーベキュー','キャンプ','Bakery','バル特集','おうちポチャ'];
   try {
     const res  = await fetch('./recipe_data.json?_=' + Date.now());
     const data = await res.json();
     if (data.success && data.recipes && data.recipes.length > 0) {
-      fetchedRecipes = data.recipes.map(r => ({
-        name: r.name,
-        icon: '✨',
-        desc: '業務スーパー公式 ' + (r.category || 'レシピ'),
-        ingredients: {},
-        recipe: ['業務スーパー公式レシピページをご確認ください'],
-        url: r.url,
-        image_url: r.image_url || '',
-        isOfficial: true,
-      }));
-      const banner = document.getElementById('recipeBanner');
-      banner.style.display = 'flex';
-      document.getElementById('recipeBannerText').textContent =
-        '✨ 業スー公式レシピ ' + fetchedRecipes.length + '件を献立に活用中（夕食に1品は公式レシピを組み込みます）';
-      document.getElementById('recipeBannerDate').textContent =
-        data.updated ? '更新日: ' + data.updated : '';
+      data.recipes.forEach(r => {
+        if (skipKw.some(k => r.name.includes(k))) return;
+        const meal = {
+          name: r.name,
+          icon: '✨',
+          desc: '業務スーパー公式 ' + (r.category || 'レシピ'),
+          ingredients: {},
+          recipe: ['業務スーパー公式レシピページをご確認ください'],
+          url: r.url,
+          image_url: r.image_url || '',
+          isOfficial: true,
+        };
+        if (dessertKw.some(k => r.name.includes(k))) {
+          snackItems.push({...meal, icon: '🍰'});
+        } else {
+          fetchedRecipes.push(meal);
+        }
+      });
+      if (fetchedRecipes.length > 0) {
+        const banner = document.getElementById('recipeBanner');
+        banner.style.display = 'flex';
+        document.getElementById('recipeBannerText').textContent =
+          '✨ 業スー公式レシピ ' + fetchedRecipes.length + '件を献立に活用中（夕食に1品は公式レシピを組み込みます）';
+        document.getElementById('recipeBannerDate').textContent =
+          data.updated ? '更新日: ' + data.updated : '';
+      }
     }
   } catch(e) { /* silent */ }
 }
