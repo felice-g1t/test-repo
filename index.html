@@ -180,6 +180,25 @@ header p{font-size:0.9rem;opacity:0.85}
 .img-popup-close:hover{color:#333}
 .has-img{cursor:pointer;text-decoration:underline dotted #a5d6a7;color:#1a5c26}
 .has-img:hover{color:#2d7a3a;text-decoration:underline #2d7a3a}
+.extras-list{display:flex;flex-wrap:wrap;gap:4px;margin-top:6px}
+.extra-chip{background:#e8f5e9;color:#2d7a3a;border-radius:12px;padding:3px 9px;font-size:0.73rem;display:flex;align-items:center;gap:3px;line-height:1.4}
+.extra-chip-x{background:none;border:none;color:#aaa;cursor:pointer;font-size:0.88rem;padding:0;line-height:1;flex-shrink:0}
+.extra-chip-x:hover{color:#e53935}
+.btn-add-extra{background:none;border:1.5px dashed #c8e6c9;color:#b0bec5;border-radius:6px;padding:4px 8px;font-size:0.7rem;cursor:pointer;width:100%;margin-top:5px;transition:all 0.15s;text-align:center}
+.btn-add-extra:hover{border-color:#4caf50;color:#2d7a3a;background:#f0f9f1}
+.extra-modal{max-width:480px;padding:18px}
+.extra-search{width:100%;padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:0.86rem;margin-bottom:7px;box-sizing:border-box}
+.extra-search:focus{outline:none;border-color:#2d7a3a}
+.extra-results{max-height:200px;overflow-y:auto;border:1px solid #eee;border-radius:8px;margin-bottom:10px}
+.extra-result-item{padding:8px 12px;font-size:0.84rem;cursor:pointer;display:flex;align-items:center;gap:8px}
+.extra-result-item:hover{background:#f0f9f1}
+.extra-result-item+.extra-result-item{border-top:1px solid #f5f5f5}
+.extra-type-badge{font-size:0.65rem;background:#e8f5e9;color:#2d7a3a;padding:2px 5px;border-radius:4px;flex-shrink:0}
+.extra-custom-row{display:flex;gap:6px}
+.extra-custom-input{flex:1;padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:0.86rem}
+.extra-custom-input:focus{outline:none;border-color:#2d7a3a}
+.extra-custom-btn{background:#2d7a3a;color:white;border:none;padding:7px 14px;border-radius:8px;cursor:pointer;font-size:0.84rem;white-space:nowrap}
+.extra-custom-btn:hover{background:#236030}
 .pm-btn-group{display:flex;gap:3px;flex-shrink:0}
 .pm-act-btn{font-size:0.7rem;cursor:pointer;padding:3px 7px;border-radius:5px;border:1.5px solid #e0e0e0;background:none;color:#aaa;line-height:1.4;transition:all 0.15s;white-space:nowrap}
 .pm-act-btn:hover{border-color:#bbb;color:#555;background:#f5f5f5}
@@ -390,6 +409,20 @@ header p{font-size:0.9rem;opacity:0.85}
       <p class="rq-hint">献立カードの ☆ でお気に入り登録。最後に登場してから28日以上経つと次の生成に自動で組み込まれます。🔄 で変えた・✕ で削除した場合は今週はスキップ（お気に入りは残ります）。</p>
     </div>
     <button class="pm-close-btn" style="width:100%;margin-top:12px" onclick="closeReqModal()">閉じる</button>
+  </div>
+</div>
+
+<div class="modal-overlay" id="extraModal" onclick="closeExtraModalOverlay(event)">
+  <div class="modal extra-modal">
+    <button class="modal-close" onclick="closeExtraModal()">✕</button>
+    <div class="modal-title" style="margin-bottom:10px">＋ もう一品追加</div>
+    <input class="extra-search" id="extraSearch" type="text" placeholder="料理名で検索..." oninput="filterExtraItems()">
+    <div class="extra-results" id="extraResults"></div>
+    <div style="font-size:0.78rem;color:#999;margin-bottom:6px">またはカスタムで自由入力:</div>
+    <div class="extra-custom-row">
+      <input class="extra-custom-input" id="extraCustomInput" type="text" placeholder="料理名を入力（例: サラダ）" onkeydown="if(event.key==='Enter')addCustomExtra()">
+      <button class="extra-custom-btn" onclick="addCustomExtra()">追加</button>
+    </div>
   </div>
 </div>
 
@@ -852,6 +885,7 @@ let requestedMealNames  = []; // 今週リクエストされた献立名
 let requestedProductIds = []; // 今週リクエストされた商品ID
 let rqActiveTab = 1;
 let removedShoppingItems = [];
+let extraModalTarget = {dayIdx: -1, mealIdx: -1};
 
 async function loadProductData() {
   try {
@@ -1296,8 +1330,85 @@ function renderFavProds() {
   }).join('');
 }
 
+// ---- もう一品追加 ----
+function openExtraModal(dayIdx, mealIdx) {
+  extraModalTarget = {dayIdx, mealIdx};
+  document.getElementById('extraSearch').value = '';
+  filterExtraItems();
+  document.getElementById('extraCustomInput').value = '';
+  document.getElementById('extraModal').classList.add('open');
+}
+function closeExtraModal() {
+  document.getElementById('extraModal').classList.remove('open');
+}
+function closeExtraModalOverlay(e) {
+  if (e.target === document.getElementById('extraModal')) closeExtraModal();
+}
+
+function filterExtraItems() {
+  const q = (document.getElementById('extraSearch').value || '').trim().toLowerCase();
+  const all = [
+    ...sideDishes.map(m => ({...m, _type:'副菜'})),
+    ...dinners.map(m => ({...m, _type:'夕食'})),
+    ...lunchMeals.map(m => ({...m, _type:'昼食'})),
+    ...breakfastMeals.map(m => ({...m, _type:'朝食'})),
+  ];
+  const filtered = q ? all.filter(m => m.name.toLowerCase().includes(q)) : all;
+  const el = document.getElementById('extraResults');
+  if (filtered.length === 0) {
+    el.innerHTML = '<div style="padding:14px;text-align:center;color:#bbb;font-size:0.82rem">見つかりません</div>';
+    return;
+  }
+  el.innerHTML = filtered.slice(0, 40).map(m =>
+    '<div class="extra-result-item" onclick="addExtraFromList(' + JSON.stringify(m.name) + ',' + JSON.stringify(m.icon || '🍽️') + ',' + JSON.stringify(JSON.stringify(m.ingredients || {})) + ')">' +
+      '<span>' + (m.icon || '🍽️') + '</span>' +
+      '<span style="flex:1">' + m.name + '</span>' +
+      '<span class="extra-type-badge">' + m._type + '</span>' +
+    '</div>'
+  ).join('');
+}
+
+function addExtraFromList(name, icon, ingredientsJson) {
+  const {dayIdx, mealIdx} = extraModalTarget;
+  if (dayIdx < 0) return;
+  const slot = currentPlan[dayIdx].slots[mealIdx];
+  if (!slot.extras) slot.extras = [];
+  if (slot.extras.some(e => e.name === name)) { closeExtraModal(); return; }
+  slot.extras.push({name, icon, ingredients: JSON.parse(ingredientsJson)});
+  refreshMealCard(dayIdx, mealIdx);
+  rebuildShopping();
+  closeExtraModal();
+}
+
+function addCustomExtra() {
+  const name = (document.getElementById('extraCustomInput').value || '').trim();
+  if (!name) return;
+  const {dayIdx, mealIdx} = extraModalTarget;
+  if (dayIdx < 0) return;
+  const slot = currentPlan[dayIdx].slots[mealIdx];
+  if (!slot.extras) slot.extras = [];
+  if (!slot.extras.some(e => e.name === name)) {
+    slot.extras.push({name, icon: '🍽️', ingredients: {}});
+    refreshMealCard(dayIdx, mealIdx);
+    rebuildShopping();
+  }
+  closeExtraModal();
+}
+
+function removeExtra(dayIdx, mealIdx, idx, event) {
+  event && event.stopPropagation();
+  const slot = currentPlan[dayIdx].slots[mealIdx];
+  if (slot.extras) slot.extras.splice(idx, 1);
+  refreshMealCard(dayIdx, mealIdx);
+  rebuildShopping();
+}
+
+function refreshMealCard(dayIdx, mealIdx) {
+  const old = document.getElementById('meal-' + dayIdx + '-' + mealIdx);
+  if (old) old.replaceWith(buildMealCardEl(dayIdx, mealIdx));
+}
+
 function isBlocked(meal) {
-  const staples = new Set(['rice','pasta','udon','bread']);
   return Object.keys(meal.ingredients).some(id => !staples.has(id) && hiddenProductIds.has(id));
 }
 
@@ -1348,7 +1459,16 @@ function buildMealCardEl(dayIdx, mealIdx) {
     '<div class="meal-name">' + meal.name + badge + '</div>' +
     '<div class="meal-desc">' + meal.desc + '</div>' +
     (sides.length > 0 ? '<div class="side-info">副菜: ' + sides.map(s => s.name).join('・') + '</div>' : '') +
-    recipeLink;
+    recipeLink +
+    ((slot.extras && slot.extras.length > 0)
+      ? '<div class="extras-list">' +
+          slot.extras.map((ex, i) =>
+            '<span class="extra-chip">' + (ex.icon || '🍽️') + ' ' + ex.name +
+            '<button class="extra-chip-x" onclick="removeExtra(' + dayIdx + ',' + mealIdx + ',' + i + ',event)" title="削除">×</button></span>'
+          ).join('') +
+        '</div>'
+      : '') +
+    '<button class="btn-add-extra" onclick="event.stopPropagation();openExtraModal(' + dayIdx + ',' + mealIdx + ')">＋ もう一品追加</button>';
   card.onclick = () => openModal(meal, sides);
   return card;
 }
@@ -1427,6 +1547,9 @@ function rebuildShopping() {
         consumption[id] = (consumption[id] || 0) + fr * pf;
       for (const sd of (slot.sides || []))
         for (const [id, fr] of Object.entries(sd.ingredients))
+          consumption[id] = (consumption[id] || 0) + fr * pf;
+      for (const ex of (slot.extras || []))
+        for (const [id, fr] of Object.entries(ex.ingredients || {}))
           consumption[id] = (consumption[id] || 0) + fr * pf;
     }
   }
