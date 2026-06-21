@@ -44,6 +44,7 @@ header p{font-size:0.9rem;opacity:0.85}
 .meal-card{background:#f8fdf8;border:2px solid #c8e6c9;border-radius:10px;padding:12px;min-width:140px;max-width:190px;flex:1;cursor:pointer;transition:box-shadow 0.2s,transform 0.1s}
 .meal-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.12);transform:translateY(-1px)}
 .meal-card .type-label{font-size:0.68rem;color:#aaa;margin-bottom:2px}
+.meal-card.snack{background:#fff9e6;border-color:#ffe082}
 .meal-card .meal-icon{font-size:1.4rem;margin-bottom:3px}
 .meal-card .meal-name{font-weight:bold;font-size:0.88rem;color:#2d7a3a;margin-bottom:4px}
 .meal-card .meal-desc{font-size:0.72rem;color:#888;line-height:1.45}
@@ -252,6 +253,7 @@ header p{font-size:0.9rem;opacity:0.85}
             <th>朝食</th>
             <th>昼食</th>
             <th>夕食</th>
+            <th>おやつ</th>
           </tr>
         </thead>
         <tbody>
@@ -260,48 +262,56 @@ header p{font-size:0.9rem;opacity:0.85}
             <td class="meal-check"><input type="checkbox" id="allB" onchange="applyAllMeals('b',this)"></td>
             <td class="meal-check"><input type="checkbox" id="allL" onchange="applyAllMeals('l',this)"></td>
             <td class="meal-check"><input type="checkbox" id="allD" onchange="applyAllMeals('d',this)"></td>
+            <td class="meal-check"><input type="checkbox" id="allS" onchange="applyAllMeals('s',this)"></td>
           </tr>
           <tr>
             <td class="day-name-cell">月</td>
             <td class="meal-check"><input type="checkbox" id="d0b"></td>
             <td class="meal-check"><input type="checkbox" id="d0l"></td>
             <td class="meal-check"><input type="checkbox" id="d0d" checked></td>
+            <td class="meal-check"><input type="checkbox" id="d0s"></td>
           </tr>
           <tr>
             <td class="day-name-cell">火</td>
             <td class="meal-check"><input type="checkbox" id="d1b"></td>
             <td class="meal-check"><input type="checkbox" id="d1l"></td>
             <td class="meal-check"><input type="checkbox" id="d1d" checked></td>
+            <td class="meal-check"><input type="checkbox" id="d1s"></td>
           </tr>
           <tr>
             <td class="day-name-cell">水</td>
             <td class="meal-check"><input type="checkbox" id="d2b"></td>
             <td class="meal-check"><input type="checkbox" id="d2l"></td>
             <td class="meal-check"><input type="checkbox" id="d2d" checked></td>
+            <td class="meal-check"><input type="checkbox" id="d2s"></td>
           </tr>
           <tr>
             <td class="day-name-cell">木</td>
             <td class="meal-check"><input type="checkbox" id="d3b"></td>
             <td class="meal-check"><input type="checkbox" id="d3l"></td>
             <td class="meal-check"><input type="checkbox" id="d3d" checked></td>
+            <td class="meal-check"><input type="checkbox" id="d3s"></td>
           </tr>
           <tr>
             <td class="day-name-cell">金</td>
             <td class="meal-check"><input type="checkbox" id="d4b"></td>
             <td class="meal-check"><input type="checkbox" id="d4l"></td>
             <td class="meal-check"><input type="checkbox" id="d4d" checked></td>
+            <td class="meal-check"><input type="checkbox" id="d4s"></td>
           </tr>
           <tr>
             <td class="day-name-cell">土</td>
             <td class="meal-check"><input type="checkbox" id="d5b" checked></td>
             <td class="meal-check"><input type="checkbox" id="d5l" checked></td>
             <td class="meal-check"><input type="checkbox" id="d5d" checked></td>
+            <td class="meal-check"><input type="checkbox" id="d5s"></td>
           </tr>
           <tr>
             <td class="day-name-cell">日</td>
             <td class="meal-check"><input type="checkbox" id="d6b" checked></td>
             <td class="meal-check"><input type="checkbox" id="d6l" checked></td>
             <td class="meal-check"><input type="checkbox" id="d6d" checked></td>
+            <td class="meal-check"><input type="checkbox" id="d6s"></td>
           </tr>
         </tbody>
       </table>
@@ -465,6 +475,14 @@ const products = {
   mayo:           {name:'マヨネーズ',       amount:'500g',                  price:198 },
   sesame:         {name:'すりごま',         amount:'50g',                   price:98  },
   shiso:          {name:'青じそ',           amount:'1パック(20枚)',          price:98  },
+  taiyaki:        {name:'冷凍たい焼き',      amount:'10個入',                price:298 },
+  pound_cake:     {name:'パウンドケーキ',    amount:'1本(450g)',             price:298 },
+  jelly_cup:      {name:'カップゼリー',      amount:'6個入',                 price:198 },
+  banana:         {name:'バナナ',           amount:'1房(約7本)',             price:188 },
+  yogurt:         {name:'プレーンヨーグルト',amount:'400g',                  price:128 },
+  ice_cream:      {name:'バニラアイス',      amount:'2L',                    price:498 },
+  frozen_mochi:   {name:'冷凍大福',         amount:'10個入',                 price:298 },
+  donut:          {name:'冷凍ドーナツ',      amount:'10個入',                 price:298 },
 };
 
 const sideDishes = [
@@ -850,6 +868,39 @@ const breakfastMeals = [
    recipe:['玉ねぎを薄切りにしてだし・醤油・みりんで煮る','溶き卵を回し入れて半熟に仕上げる','ご飯に乗せて長ねぎを添える']},
 ];
 
+const snackItems = [
+  {name:'たい焼き',      icon:'🐟', desc:'冷凍たい焼き（あんこ）',
+   ingredients:{taiyaki:0.3},
+   recipe:['電子レンジで1個あたり約1分加熱する','トースターで少し焼くとカリッと仕上がる']},
+  {name:'パウンドケーキ',icon:'🍰', desc:'しっとり業スーのパウンドケーキ',
+   ingredients:{pound_cake:0.1},
+   recipe:['好みの厚さにスライスして盛り付ける','トースターで軽く温めると風味アップ']},
+  {name:'カップゼリー',  icon:'🍮', desc:'さっぱりカップゼリー',
+   ingredients:{jelly_cup:0.25},
+   recipe:['冷蔵庫でよく冷やして食べる']},
+  {name:'バナナヨーグルト',icon:'🍌',desc:'バナナ＋ヨーグルト',
+   ingredients:{banana:0.15, yogurt:0.25},
+   recipe:['バナナを輪切りにしてヨーグルトにのせる','はちみつをかけると美味しい']},
+  {name:'アイスクリーム', icon:'🍦', desc:'バニラアイス',
+   ingredients:{ice_cream:0.08},
+   recipe:['適量をカップやコーンに盛り付ける']},
+  {name:'冷凍大福',      icon:'🍡', desc:'冷凍大福（あんこ・いちご等）',
+   ingredients:{frozen_mochi:0.2},
+   recipe:['冷凍のまま食べてもOK','少し室温に戻すと柔らかくなる']},
+  {name:'ドーナツ',      icon:'🍩', desc:'冷凍ドーナツ',
+   ingredients:{donut:0.2},
+   recipe:['電子レンジで20〜30秒温める','そのまま食べてもOK']},
+  {name:'チーズトースト（おやつ）',icon:'🧀', desc:'食パン＋チーズのおやつトースト',
+   ingredients:{bread:0.1, cheese:0.08},
+   recipe:['食パンにチーズをのせてトースターで3〜4分焼く']},
+  {name:'バナナ',        icon:'🍌', desc:'そのままバナナ',
+   ingredients:{banana:0.2},
+   recipe:['皮をむいてそのまま食べる']},
+  {name:'ヨーグルト',    icon:'🥛', desc:'プレーンヨーグルト',
+   ingredients:{yogurt:0.25},
+   recipe:['カップに盛り、はちみつや砂糖をかける']},
+];
+
 let salePrices = {};
 let fetchedRecipes = [];
 let productCatalog = []; // products_data.json から読み込んだ全商品
@@ -881,7 +932,7 @@ function applyAllMeals(type, el) {
 }
 
 function syncAllRowState() {
-  ['b','l','d'].forEach(t => {
+  ['b','l','d','s'].forEach(t => {
     const states = Array.from({length:7}, (_,i) => document.getElementById('d'+i+t).checked);
     const el = document.getElementById('all' + t.toUpperCase());
     if (!el) return;
@@ -902,6 +953,7 @@ function saveSettings() {
       b: document.getElementById('d'+i+'b').checked,
       l: document.getElementById('d'+i+'l').checked,
       d: document.getElementById('d'+i+'d').checked,
+      s: document.getElementById('d'+i+'s').checked,
     };
   }
   localStorage.setItem('weekSettings', JSON.stringify(s));
@@ -919,6 +971,7 @@ function loadSettings() {
       document.getElementById('d'+i+'b').checked = !!d.b;
       document.getElementById('d'+i+'l').checked = !!d.l;
       document.getElementById('d'+i+'d').checked = !!d.d;
+      document.getElementById('d'+i+'s').checked = !!d.s;
     }
     syncAllRowState();
   } catch(e) {}
@@ -1472,7 +1525,10 @@ function isKidFriendly(meal) {
 }
 
 function getPool(type, kidFriendly) {
-  const full = type === 'dinner' ? dinners : type === 'lunch' ? lunchMeals : breakfastMeals;
+  const full = type === 'dinner' ? dinners
+             : type === 'lunch' ? lunchMeals
+             : type === 'snack' ? snackItems
+             : breakfastMeals;
   let av = full.filter(m => !isBlocked(m));
   if (av.length === 0) av = full;
   if (kidFriendly) {
@@ -1497,7 +1553,7 @@ function buildMealCardEl(dayIdx, mealIdx) {
   const meal = slot.meal;
   const sides = slot.sides || [];
   const card = document.createElement('div');
-  card.className = 'meal-card' + (meal.isOfficial ? ' official' : '');
+  card.className = 'meal-card' + (meal.isOfficial ? ' official' : '') + (slot.type === 'snack' ? ' snack' : '');
   card.id = 'meal-' + dayIdx + '-' + mealIdx;
   const badge = meal.isOfficial ? '<span class="official-badge">業スー公式</span>' : '';
   const recipeLink = meal.isOfficial && meal.url
@@ -1716,7 +1772,8 @@ function generate() {
     const hasB = document.getElementById('d'+i+'b').checked;
     const hasL = document.getElementById('d'+i+'l').checked;
     const hasD = document.getElementById('d'+i+'d').checked;
-    if (hasB || hasL || hasD) activeDays.push({label:dayNames[i], hasB, hasL, hasD, effectivePersons, adults, elementary, toddlers});
+    const hasS = document.getElementById('d'+i+'s').checked;
+    if (hasB || hasL || hasD || hasS) activeDays.push({label:dayNames[i], hasB, hasL, hasD, hasS, effectivePersons, adults, elementary, toddlers});
   }
   if (activeDays.length === 0) { alert('食事を1つ以上チェックしてください'); return; }
 
@@ -1732,6 +1789,7 @@ function generate() {
     if (day.hasB) slotDefs.push({label:'朝食', type:'breakfast', isDinner:false});
     if (day.hasL) slotDefs.push({label:'昼食', type:'lunch',     isDinner:false});
     if (day.hasD) slotDefs.push({label:'夕食', type:'dinner',    isDinner:true });
+    if (day.hasS) slotDefs.push({label:'おやつ', type:'snack',   isDinner:false});
     const hasKids = (day.elementary > 0 || day.toddlers > 0);
     const slots = slotDefs.map(sd => {
       const pool = getPool(sd.type, hasKids);
