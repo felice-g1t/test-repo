@@ -186,6 +186,9 @@ header p{font-size:0.9rem;opacity:0.85}
 .extra-chip-x:hover{color:#e53935}
 .btn-add-extra{background:none;border:1.5px dashed #c8e6c9;color:#b0bec5;border-radius:6px;padding:4px 8px;font-size:0.7rem;cursor:pointer;width:100%;margin-top:5px;transition:all 0.15s;text-align:center}
 .btn-add-extra:hover{border-color:#4caf50;color:#2d7a3a;background:#f0f9f1}
+.slot-persons{display:flex;align-items:center;gap:3px;margin-top:6px;padding:4px 6px;background:#f5f5f5;border-radius:6px;font-size:0.7rem;color:#666}
+.slot-num-label{font-size:0.65rem;color:#999;white-space:nowrap}
+.slot-num-input{width:28px;padding:1px 2px;border:1px solid #ddd;border-radius:4px;font-size:0.72rem;text-align:center;background:#fff}
 .extra-modal{max-width:480px;padding:18px}
 .extra-search{width:100%;padding:7px 10px;border:1.5px solid #ddd;border-radius:8px;font-size:0.86rem;margin-bottom:7px;box-sizing:border-box}
 .extra-search:focus{outline:none;border-color:#2d7a3a}
@@ -883,6 +886,7 @@ let salePrices = {};
 let fetchedRecipes = [];
 let productCatalog = []; // products_data.json から読み込んだ全商品
 let hiddenProductIds = new Set(JSON.parse(localStorage.getItem('hiddenProducts') || '[]'));
+const staples = new Set(['rice','miso','mentsuyu','mayo','sesame','bread','egg']);
 let currentPlan = [];
 let productImages = {}; // id → image_url
 let pmActiveCategory = 'すべて';
@@ -899,6 +903,7 @@ let requestedProductIds = []; // 今週リクエストされた商品ID
 let rqActiveTab = 1;
 let removedShoppingItems = [];
 let extraModalTarget = {dayIdx: -1, mealIdx: -1};
+let extraResultsData = [];
 
 // ---- 設定の一括適用 & 保存 ----
 function applyAllMeals(type, el) {
@@ -1435,8 +1440,10 @@ function filterExtraItems() {
     el.innerHTML = '<div style="padding:14px;text-align:center;color:#bbb;font-size:0.82rem">見つかりません</div>';
     return;
   }
-  el.innerHTML = filtered.slice(0, 40).map(m =>
-    '<div class="extra-result-item" onclick="addExtraFromList(' + JSON.stringify(m.name) + ',' + JSON.stringify(m.icon || '🍽️') + ',' + JSON.stringify(JSON.stringify(m.ingredients || {})) + ')">' +
+  const slice = filtered.slice(0, 40);
+  extraResultsData = slice;
+  el.innerHTML = slice.map((m, i) =>
+    '<div class="extra-result-item" onclick="addExtraFromIdx(' + i + ')">' +
       '<span>' + (m.icon || '🍽️') + '</span>' +
       '<span style="flex:1">' + m.name + '</span>' +
       '<span class="extra-type-badge">' + m._type + '</span>' +
@@ -1444,13 +1451,19 @@ function filterExtraItems() {
   ).join('');
 }
 
-function addExtraFromList(name, icon, ingredientsJson) {
+function addExtraFromIdx(i) {
+  const m = extraResultsData[i];
+  if (!m) return;
+  addExtraFromList(m.name, m.icon || '🍽️', m.ingredients || {});
+}
+
+function addExtraFromList(name, icon, ingredients) {
   const {dayIdx, mealIdx} = extraModalTarget;
   if (dayIdx < 0) return;
   const slot = currentPlan[dayIdx].slots[mealIdx];
   if (!slot.extras) slot.extras = [];
   if (slot.extras.some(e => e.name === name)) { closeExtraModal(); return; }
-  slot.extras.push({name, icon, ingredients: JSON.parse(ingredientsJson)});
+  slot.extras.push({name, icon, ingredients: typeof ingredients === 'string' ? JSON.parse(ingredients) : ingredients});
   refreshMealCard(dayIdx, mealIdx);
   rebuildShopping();
   closeExtraModal();
@@ -1505,6 +1518,15 @@ function getPool(type, kidFriendly) {
   return av;
 }
 
+function updateSlotPersons(dayIdx, mealIdx, field, value) {
+  const slot = currentPlan[dayIdx].slots[mealIdx];
+  const v = parseInt(value) || 0;
+  if (field === 'a') slot.adults = v;
+  else if (field === 'e') slot.elementary = v;
+  else if (field === 't') slot.toddlers = v;
+  rebuildShopping();
+}
+
 function buildMealCardEl(dayIdx, mealIdx) {
   const day  = currentPlan[dayIdx];
   const slot = day.slots[mealIdx];
@@ -1522,6 +1544,15 @@ function buildMealCardEl(dayIdx, mealIdx) {
     : '';
   const isFav = favoriteMeals.has(meal.name);
   const safeName = meal.name.replace(/\\/g,'\\\\').replace(/'/g,"\\'").replace(/"/g,'&quot;');
+  const slotA = slot.adults !== undefined ? slot.adults : 0;
+  const slotE = slot.elementary !== undefined ? slot.elementary : 0;
+  const slotT = slot.toddlers !== undefined ? slot.toddlers : 0;
+  const personsRow =
+    '<div class="slot-persons" onclick="event.stopPropagation()">👤' +
+    '<span class="slot-num-label">大</span><input class="slot-num-input" type="number" min="0" max="9" value="' + slotA + '" oninput="updateSlotPersons(' + dayIdx + ',' + mealIdx + ',\'a\',this.value)">' +
+    '<span class="slot-num-label">小</span><input class="slot-num-input" type="number" min="0" max="9" value="' + slotE + '" oninput="updateSlotPersons(' + dayIdx + ',' + mealIdx + ',\'e\',this.value)">' +
+    '<span class="slot-num-label">幼</span><input class="slot-num-input" type="number" min="0" max="9" value="' + slotT + '" oninput="updateSlotPersons(' + dayIdx + ',' + mealIdx + ',\'t\',this.value)">' +
+    '</div>';
   card.innerHTML =
     '<div class="meal-card-header">' +
       '<div class="type-label">' + slot.label + '</div>' +
@@ -1544,7 +1575,8 @@ function buildMealCardEl(dayIdx, mealIdx) {
           ).join('') +
         '</div>'
       : '') +
-    '<button class="btn-add-extra" onclick="event.stopPropagation();openExtraModal(' + dayIdx + ',' + mealIdx + ')">＋ もう一品追加</button>';
+    '<button class="btn-add-extra" onclick="event.stopPropagation();openExtraModal(' + dayIdx + ',' + mealIdx + ')">＋ もう一品追加</button>' +
+    personsRow;
   card.onclick = () => openModal(meal, sides);
   return card;
 }
@@ -1617,8 +1649,12 @@ function rebuildShopping() {
   const today = new Date().toISOString().slice(0,10);
   const consumption = {};
   for (const day of currentPlan) {
-    const pf = (day.effectivePersons > 0 ? day.effectivePersons : 1) / 2;
     for (const slot of day.slots) {
+      const slotA = slot.adults !== undefined ? slot.adults : 0;
+      const slotE = slot.elementary !== undefined ? slot.elementary : 0;
+      const slotT = slot.toddlers !== undefined ? slot.toddlers : 0;
+      const slotEff = (slotA + slotE * 0.5 + slotT * (1/3)) || day.effectivePersons || 1;
+      const pf = slotEff / 2;
       for (const [id, fr] of Object.entries(slot.meal.ingredients))
         consumption[id] = (consumption[id] || 0) + fr * pf;
       for (const sd of (slot.sides || []))
@@ -1716,7 +1752,7 @@ function generate() {
     const elementary = parseInt(document.getElementById('d'+i+'e').value) || 0;
     const toddlers   = parseInt(document.getElementById('d'+i+'t').value) || 0;
     const effectivePersons = adults + elementary * 0.5 + toddlers * (1/3);
-    if (hasB || hasL || hasD) activeDays.push({label:dayNames[i], hasB, hasL, hasD, effectivePersons, elementary, toddlers});
+    if (hasB || hasL || hasD) activeDays.push({label:dayNames[i], hasB, hasL, hasD, effectivePersons, adults, elementary, toddlers});
   }
   if (activeDays.length === 0) { alert('食事を1つ以上チェックしてください'); return; }
 
@@ -1744,7 +1780,8 @@ function generate() {
         meal = pickRandom(pool, 1)[0];
       }
       const sides = sd.isDinner ? [...sideDishes].sort(() => Math.random() - 0.5).slice(0, 2) : [];
-      return {label:sd.label, type:sd.type, isDinner:sd.isDinner, meal, sides};
+      return {label:sd.label, type:sd.type, isDinner:sd.isDinner, meal, sides,
+              adults: day.adults, elementary: day.elementary, toddlers: day.toddlers};
     });
     currentPlan.push({label:day.label, effectivePersons:day.effectivePersons, hasKids, slots});
   }
