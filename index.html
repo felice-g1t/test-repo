@@ -368,7 +368,7 @@ header p{font-size:0.9rem;opacity:0.85}
     <button class="modal-close" onclick="closeModal()">✕</button>
     <div class="modal-icon" id="mIcon"></div>
     <div class="modal-title" id="mTitle"></div>
-    <div class="modal-sec">材料（2人前）</div>
+    <div class="modal-sec">材料（<span id="mServings"></span>）</div>
     <div id="mIngr"></div>
     <div class="modal-sec">作り方</div>
     <ol class="recipe-steps" id="mRecipe"></ol>
@@ -1209,9 +1209,17 @@ function pickRandom(arr, n) {
 }
 
 
-function openModal(meal, sides) {
+function openModal(meal, sides, adults, elementary, toddlers) {
   document.getElementById('mIcon').textContent = meal.icon;
   document.getElementById('mTitle').textContent = meal.name;
+  const a = adults || 0, e = elementary || 0, t = toddlers || 0;
+  const eff = a + e * 0.5 + t * (1/3);
+  const scale = eff > 0 ? eff / 2 : 1;
+  const parts = [];
+  if (a > 0) parts.push('大人×' + a);
+  if (e > 0) parts.push('小学×' + e);
+  if (t > 0) parts.push('幼児×' + t);
+  document.getElementById('mServings').textContent = parts.length > 0 ? parts.join('・') + '人分' : '基準分量';
   document.getElementById('mIngr').innerHTML = Object.keys(meal.ingredients)
     .map(id => {
       if (!products[id]) return '';
@@ -1219,7 +1227,9 @@ function openModal(meal, sides) {
       const extra = hasImg
         ? ' class="has-img" onclick="showProductImage(\'' + id + '\')" title="画像を見る"'
         : '';
-      return '<span style="display:inline-block;background:#e8f5e9;border-radius:5px;padding:3px 8px;margin:3px;font-size:0.83rem;"' + extra + '>' + products[id].name + '</span>';
+      const qty = formatUsage(meal.ingredients[id] * scale, products[id].amount);
+      return '<span style="display:inline-block;background:#e8f5e9;border-radius:5px;padding:3px 8px;margin:3px;font-size:0.83rem;"' + extra + '>' +
+        products[id].name + '<span style="color:#888;font-size:0.76rem;margin-left:4px">約' + qty + '</span></span>';
     })
     .join('');
   document.getElementById('mRecipe').innerHTML = meal.recipe
@@ -1609,7 +1619,7 @@ function buildMealCardEl(dayIdx, mealIdx) {
       : '') +
     '<button class="btn-add-extra" onclick="event.stopPropagation();openExtraModal(' + dayIdx + ',' + mealIdx + ')">＋ もう一品追加</button>' +
     personsRow;
-  card.onclick = () => openModal(meal, sides);
+  card.onclick = () => openModal(meal, sides, slot.adults, slot.elementary, slot.toddlers);
   return card;
 }
 
