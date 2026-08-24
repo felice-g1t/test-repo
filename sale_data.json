@@ -1,7 +1,7 @@
 {
-  "updated": "2026-08-17",
+  "updated": "2026-08-24",
   "success": false,
-  "message": "エラー: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011Ce7WUZJkViAwp61bys2VD'}",
+  "message": "エラー: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CeLmN9mHRmBHmSKkKCRQe'}",
   "items": [],
   "allSaleItems": []
 }
