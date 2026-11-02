@@ -1,7 +1,7 @@
 {
-  "updated": "2026-10-26",
-  "success": true,
-  "message": "Claude解析完了: 0品取得、0品マッチ",
+  "updated": "2026-11-02",
+  "success": false,
+  "message": "エラー: Error code: 400 - {'type': 'error', 'error': {'type': 'invalid_request_error', 'message': 'Your credit balance is too low to access the Anthropic API. Please go to Plans & Billing to upgrade or purchase credits.'}, 'request_id': 'req_011CgdfVDfSkTQVxLEW65HBT'}",
   "items": [],
   "allSaleItems": []
 }
